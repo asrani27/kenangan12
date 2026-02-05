@@ -10,7 +10,12 @@ use App\Http\Controllers\PptkDashboardController;
 Route::get('/', function () {
     return view('dashboard');
 })->name('dashboard');
-
+Route::get('/server-info', function () {
+    return [
+        'hostname' => gethostname(),
+        'ip' => $_SERVER['SERVER_ADDR'] ?? 'unknown',
+    ];
+});
 // Authentication Routes
 Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->name('login.process');
