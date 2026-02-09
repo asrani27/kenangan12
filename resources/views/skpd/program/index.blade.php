@@ -85,6 +85,11 @@
                     </td>
                     <td class="py-3">
                         <div class="flex items-center justify-center space-x-2">
+                            <a href="{{ route('skpd.kegiatan.create', $program->id) }}"
+                                class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-green-500/20 text-green-400 hover:bg-green-500/30 transition-colors"
+                                title="Tambah Kegiatan">
+                                <i class="fas fa-plus text-sm"></i>
+                            </a>
                             <a href="{{ route('skpd.program.edit', $program->id) }}"
                                 class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 transition-colors"
                                 title="Edit">
@@ -118,6 +123,22 @@
                     </td>
                     <td class="py-2">
                         <div class="flex items-center justify-center space-x-2">
+                            <a href="{{ route('skpd.subkegiatan.create', $kegiatan->id) }}"
+                                class="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-green-500/20 text-green-400 hover:bg-green-500/30 transition-colors"
+                                title="Tambah Sub-kegiatan">
+                                <i class="fas fa-plus text-xs"></i>
+                            </a>
+                            <a href="{{ route('skpd.kegiatan.edit', $kegiatan->id) }}"
+                                class="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 transition-colors"
+                                title="Edit Kegiatan">
+                                <i class="fas fa-edit text-xs"></i>
+                            </a>
+                            <button
+                                onclick="confirmDeleteKegiatan({{ $kegiatan->id }}, '{{ $kegiatan->kode }} - {{ $kegiatan->nama }}')"
+                                class="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-red-500/20 text-red-400 hover:bg-red-500/30 transition-colors"
+                                title="Hapus Kegiatan">
+                                <i class="fas fa-trash text-xs"></i>
+                            </button>
                             @if($kegiatan->sub_kegiatan && $kegiatan->sub_kegiatan->count() > 0)
                             <span class="text-xs text-slate-400"
                                 title="{{ $kegiatan->sub_kegiatan->count() }} Sub Kegiatan">
@@ -154,6 +175,17 @@
                     </td>
                     <td class="py-2">
                         <div class="flex items-center justify-center space-x-2">
+                            <a href="{{ route('skpd.subkegiatan.edit', $subKegiatan->id) }}"
+                                class="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 transition-colors"
+                                title="Edit Sub-kegiatan">
+                                <i class="fas fa-edit text-xs"></i>
+                            </a>
+                            <button
+                                onclick="confirmDeleteSubkegiatan({{ $subKegiatan->id }}, '{{ $subKegiatan->kode }} - {{ $subKegiatan->nama }}')"
+                                class="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-red-500/20 text-red-400 hover:bg-red-500/30 transition-colors"
+                                title="Hapus Sub-kegiatan">
+                                <i class="fas fa-trash text-xs"></i>
+                            </button>
                         </div>
                     </td>
                 </tr>
@@ -182,7 +214,7 @@
     </div>
 </div>
 
-<!-- Delete Confirmation Modal -->
+<!-- Delete Program Confirmation Modal -->
 <div id="deleteModal" class="fixed inset-0 bg-black/50 z-50 hidden items-center justify-center p-4">
     <div class="card-gradient rounded-xl p-6 border border-slate-700/50 max-w-md w-full transform transition-all">
         <div class="text-center">
@@ -213,6 +245,68 @@
     </div>
 </div>
 
+<!-- Delete Kegiatan Confirmation Modal -->
+<div id="deleteKegiatanModal" class="fixed inset-0 bg-black/50 z-50 hidden items-center justify-center p-4">
+    <div class="card-gradient rounded-xl p-6 border border-slate-700/50 max-w-md w-full transform transition-all">
+        <div class="text-center">
+            <div class="w-16 h-16 rounded-full bg-red-500/20 flex items-center justify-center mx-auto mb-4">
+                <i class="fas fa-exclamation-triangle text-3xl text-red-400"></i>
+            </div>
+            <h3 class="text-xl font-bold text-white mb-2">Hapus Kegiatan?</h3>
+            <p class="text-slate-400 text-sm mb-6">
+                Apakah Anda yakin ingin menghapus kegiatan "<span id="kegiatanName"
+                    class="text-white font-medium"></span>"?
+                Tindakan ini tidak dapat dibatalkan.
+            </p>
+            <form id="deleteKegiatanForm" action="" method="POST">
+                @csrf
+                @method('DELETE')
+                <div class="flex items-center justify-center space-x-3">
+                    <button type="button" onclick="closeDeleteKegiatanModal()"
+                        class="px-4 py-2 rounded-lg bg-slate-700 text-white hover:bg-slate-600 transition-colors">
+                        Batal
+                    </button>
+                    <button type="submit"
+                        class="px-4 py-2 rounded-lg bg-red-500 text-white hover:bg-red-600 transition-colors">
+                        Hapus
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Sub-kegiatan Confirmation Modal -->
+<div id="deleteSubkegiatanModal" class="fixed inset-0 bg-black/50 z-50 hidden items-center justify-center p-4">
+    <div class="card-gradient rounded-xl p-6 border border-slate-700/50 max-w-md w-full transform transition-all">
+        <div class="text-center">
+            <div class="w-16 h-16 rounded-full bg-red-500/20 flex items-center justify-center mx-auto mb-4">
+                <i class="fas fa-exclamation-triangle text-3xl text-red-400"></i>
+            </div>
+            <h3 class="text-xl font-bold text-white mb-2">Hapus Sub-kegiatan?</h3>
+            <p class="text-slate-400 text-sm mb-6">
+                Apakah Anda yakin ingin menghapus sub-kegiatan "<span id="subkegiatanName"
+                    class="text-white font-medium"></span>"?
+                Tindakan ini tidak dapat dibatalkan.
+            </p>
+            <form id="deleteSubkegiatanForm" action="" method="POST">
+                @csrf
+                @method('DELETE')
+                <div class="flex items-center justify-center space-x-3">
+                    <button type="button" onclick="closeDeleteSubkegiatanModal()"
+                        class="px-4 py-2 rounded-lg bg-slate-700 text-white hover:bg-slate-600 transition-colors">
+                        Batal
+                    </button>
+                    <button type="submit"
+                        class="px-4 py-2 rounded-lg bg-red-500 text-white hover:bg-red-600 transition-colors">
+                        Hapus
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 <script>
     function confirmDelete(id, name) {
         document.getElementById('programName').textContent = name;
@@ -224,6 +318,30 @@
     function closeDeleteModal() {
         document.getElementById('deleteModal').classList.add('hidden');
         document.getElementById('deleteModal').classList.remove('flex');
+    }
+
+    function confirmDeleteKegiatan(id, name) {
+        document.getElementById('kegiatanName').textContent = name;
+        document.getElementById('deleteKegiatanForm').action = '/skpd/kegiatan/' + id;
+        document.getElementById('deleteKegiatanModal').classList.remove('hidden');
+        document.getElementById('deleteKegiatanModal').classList.add('flex');
+    }
+
+    function closeDeleteKegiatanModal() {
+        document.getElementById('deleteKegiatanModal').classList.add('hidden');
+        document.getElementById('deleteKegiatanModal').classList.remove('flex');
+    }
+
+    function confirmDeleteSubkegiatan(id, name) {
+        document.getElementById('subkegiatanName').textContent = name;
+        document.getElementById('deleteSubkegiatanForm').action = '/skpd/subkegiatan/' + id;
+        document.getElementById('deleteSubkegiatanModal').classList.remove('hidden');
+        document.getElementById('deleteSubkegiatanModal').classList.add('flex');
+    }
+
+    function closeDeleteSubkegiatanModal() {
+        document.getElementById('deleteSubkegiatanModal').classList.add('hidden');
+        document.getElementById('deleteSubkegiatanModal').classList.remove('flex');
     }
 
     // Year filter functionality

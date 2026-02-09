@@ -79,8 +79,22 @@ Route::prefix('skpd')->name('skpd.')->middleware(['auth'])->group(function () {
         Route::delete('/{id}', [SkpdDashboardController::class, 'programDestroy'])->name('destroy');
     });
 
+    // Kegiatan Routes
+    Route::prefix('kegiatan')->name('kegiatan.')->group(function () {
+        Route::get('/create/{program_id}', [SkpdDashboardController::class, 'kegiatanCreate'])->name('create');
+        Route::post('/', [SkpdDashboardController::class, 'kegiatanStore'])->name('store');
+        Route::get('/{id}/edit', [SkpdDashboardController::class, 'kegiatanEdit'])->name('edit');
+        Route::put('/{id}', [SkpdDashboardController::class, 'kegiatanUpdate'])->name('update');
+        Route::delete('/{id}', [SkpdDashboardController::class, 'kegiatanDestroy'])->name('destroy');
+    });
+
     // Sub-kegiatan Routes
     Route::prefix('subkegiatan')->name('subkegiatan.')->group(function () {
+        Route::get('/create/{kegiatan_id}', [SkpdDashboardController::class, 'subkegiatanCreate'])->name('create');
+        Route::post('/', [SkpdDashboardController::class, 'subkegiatanStore'])->name('store');
+        Route::get('/{id}/edit', [SkpdDashboardController::class, 'subkegiatanEdit'])->name('edit');
+        Route::put('/{id}', [SkpdDashboardController::class, 'subkegiatanUpdate'])->name('update');
+        Route::delete('/{id}', [SkpdDashboardController::class, 'subkegiatanDestroy'])->name('destroy');
         Route::post('/update-pptk', [SkpdDashboardController::class, 'updateSubkegiatanPptk'])->name('updatePptk');
     });
 });

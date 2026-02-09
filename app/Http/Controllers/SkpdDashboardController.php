@@ -154,6 +154,242 @@ class SkpdDashboardController extends Controller
     }
 
     /**
+     * Show the form for creating a new subkegiatan.
+     *
+     * @param  int  $kegiatan_id
+     * @return \Illuminate\View\View
+     */
+    public function subkegiatanCreate($kegiatan_id)
+    {
+        if (!Auth::check()) {
+            return redirect()->route('login')
+                ->with('error', 'Silakan login terlebih dahulu.');
+        }
+
+        $user = Auth::user();
+        $skpd = Skpd::where('user_id', $user->id)->first();
+
+        if (!$skpd) {
+            return back()->with('error', 'Data SKPD tidak ditemukan.');
+        }
+
+        $kegiatan = Kegiatan::where('id', $kegiatan_id)->firstOrFail();
+        
+        // Verify kegiatan belongs to SKPD
+        $program = Program::where('kode', $kegiatan->kode_program)->first();
+        if ($program->kode_skpd !== $skpd->kode_skpd) {
+            return back()->with('error', 'Anda tidak memiliki akses ke kegiatan ini.');
+        }
+
+        return view('skpd.subkegiatan.create', compact('skpd', 'kegiatan', 'program'));
+    }
+
+    /**
+     * Store a newly created subkegiatan in storage.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function subkegiatanStore(Request $request)
+    {
+        if (!Auth::check()) {
+            return redirect()->route('login')
+                ->with('error', 'Silakan login terlebih dahulu.');
+        }
+
+        $user = Auth::user();
+        $skpd = Skpd::where('user_id', $user->id)->first();
+
+        if (!$skpd) {
+            return back()->with('error', 'Data SKPD tidak ditemukan.');
+        }
+
+        $kegiatan = Kegiatan::where('id', $request->kegiatan_id)->firstOrFail();
+        
+        // Verify kegiatan belongs to SKPD
+        $program = Program::where('kode', $kegiatan->kode_program)->first();
+        if ($program->kode_skpd !== $skpd->kode_skpd) {
+            return back()->with('error', 'Anda tidak memiliki akses ke kegiatan ini.');
+        }
+
+        $request->validate([
+            'kode' => 'required|string|max:50',
+            'nama' => 'required|string|max:255',
+        ], [
+            'kode.required' => 'Kode Sub-kegiatan wajib diisi.',
+            'nama.required' => 'Nama Sub-kegiatan wajib diisi.',
+        ]);
+
+        SubKegiatan::create([
+            'kode' => $request->kode,
+            'kode_kegiatan' => $kegiatan->kode,
+            'nama' => $request->nama,
+        ]);
+
+        return redirect()->route('skpd.program.index')
+            ->with('success', 'Sub-kegiatan berhasil ditambahkan!');
+    }
+
+    /**
+     * Show the form for editing the specified subkegiatan.
+     *
+     * @param  int  $id
+     * @return \Illuminate\View\View
+     */
+    public function subkegiatanEdit($id)
+    {
+        if (!Auth::check()) {
+            return redirect()->route('login')
+                ->with('error', 'Silakan login terlebih dahulu.');
+        }
+
+        $user = Auth::user();
+        $skpd = Skpd::where('user_id', $user->id)->first();
+
+        if (!$skpd) {
+            return back()->with('error', 'Data SKPD tidak ditemukan.');
+        }
+
+        $subkegiatan = SubKegiatan::where('id', $id)->firstOrFail();
+        $kegiatan = Kegiatan::where('kode', $subkegiatan->kode_kegiatan)->firstOrFail();
+        $program = Program::where('kode', $kegiatan->kode_program)->firstOrFail();
+
+        // Verify belongs to SKPD
+        if ($program->kode_skpd !== $skpd->kode_skpd) {
+            return back()->with('error', 'Anda tidak memiliki akses ke sub-kegiatan ini.');
+        }
+
+        return view('skpd.subkegiatan.edit', compact('skpd', 'subkegiatan', 'kegiatan', 'program'));
+    }
+
+    /**
+     * Update the specified subkegiatan in storage.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  int  $id
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function subkegiatanUpdate(Request $request, $id)
+    {
+        if (!Auth::check()) {
+            return redirect()->route('login')
+                ->with('error', 'Silakan login terlebih dahulu.');
+        }
+
+        $user = Auth::user();
+        $skpd = Skpd::where('user_id', $user->id)->first();
+
+        if (!$skpd) {
+            return back()->with('error', 'Data SKPD tidak ditemukan.');
+        }
+
+        $subkegiatan = SubKegiatan::where('id', $id)->firstOrFail();
+        $kegiatan = Kegiatan::where('kode', $subkegiatan->kode_kegiatan)->firstOrFail();
+        $program = Program::where('kode', $kegiatan->kode_program)->firstOrFail();
+
+        // Verify belongs to SKPD
+        if ($program->kode_skpd !== $skpd->kode_skpd) {
+            return back()->with('error', 'Anda tidak memiliki akses ke sub-kegiatan ini.');
+        }
+
+        $request->validate([
+            'kode' => 'required|string|max:50',
+            'nama' => 'required|string|max:255',
+        ], [
+            'kode.required' => 'Kode Sub-kegiatan wajib diisi.',
+            'nama.required' => 'Nama Sub-kegiatan wajib diisi.',
+        ]);
+
+        $subkegiatan->update([
+            'kode' => $request->kode,
+            'nama' => $request->nama,
+        ]);
+
+        return redirect()->route('skpd.program.index')
+            ->with('success', 'Sub-kegiatan berhasil diperbarui!');
+    }
+
+    /**
+     * Remove the specified subkegiatan from storage.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function subkegiatanDestroy($id)
+    {
+        if (!Auth::check()) {
+            return redirect()->route('login')
+                ->with('error', 'Silakan login terlebih dahulu.');
+        }
+
+        $user = Auth::user();
+        $skpd = Skpd::where('user_id', $user->id)->first();
+
+        if (!$skpd) {
+            return back()->with('error', 'Data SKPD tidak ditemukan.');
+        }
+
+        $subkegiatan = SubKegiatan::where('id', $id)->firstOrFail();
+        $kegiatan = Kegiatan::where('kode', $subkegiatan->kode_kegiatan)->firstOrFail();
+        $program = Program::where('kode', $kegiatan->kode_program)->firstOrFail();
+
+        // Verify belongs to SKPD
+        if ($program->kode_skpd !== $skpd->kode_skpd) {
+            return back()->with('error', 'Anda tidak memiliki akses ke sub-kegiatan ini.');
+        }
+
+        $subkegiatan->delete();
+
+        return redirect()->route('skpd.program.index')
+            ->with('success', 'Sub-kegiatan berhasil dihapus!');
+    }
+
+    /**
+     * Update PPTK for sub-kegiatan.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function updateSubkegiatanPptk(Request $request)
+    {
+        if (!Auth::check()) {
+            return response()->json(['success' => false, 'message' => 'Silakan login terlebih dahulu.'], 401);
+        }
+
+        $user = Auth::user();
+        $skpd = Skpd::where('user_id', $user->id)->first();
+
+        if (!$skpd) {
+            return response()->json(['success' => false, 'message' => 'Data SKPD tidak ditemukan.'], 404);
+        }
+
+        $request->validate([
+            'subkegiatan_id' => 'required|integer',
+            'nip_pptk' => 'nullable|string|max:50',
+        ]);
+
+        $subkegiatan = SubKegiatan::find($request->subkegiatan_id);
+
+        if (!$subkegiatan) {
+            return response()->json(['success' => false, 'message' => 'Sub-kegiatan tidak ditemukan.'], 404);
+        }
+
+        // Verify the subkegiatan belongs to the user's SKPD
+        $kegiatan = Kegiatan::where('kode', $subkegiatan->kode_kegiatan)->first();
+        $program = Program::where('kode', $kegiatan->kode_program)->first();
+
+        if ($program->kode_skpd !== $skpd->kode_skpd) {
+            return response()->json(['success' => false, 'message' => 'Anda tidak memiliki akses ke sub-kegiatan ini.'], 403);
+        }
+
+        // Update PPTK
+        $subkegiatan->nip_pptk = $request->nip_pptk;
+        $subkegiatan->save();
+
+        return response()->json(['success' => true, 'message' => 'PPTK berhasil diperbarui!']);
+    }
+
+    /**
      * Display a listing of the bidang.
      *
      * @return \Illuminate\View\View
@@ -396,17 +632,39 @@ class SkpdDashboardController extends Controller
         }
 
         $request->validate([
-            'nip_pptk' => 'required|string|max:50|unique:pptk,nip_pptk',
+            'nip_pptk' => 'required|string|max:50',
             'nama_pptk' => 'required|string|max:255',
             'bidang_id' => 'required|exists:bidang,id',
         ], [
             'nip_pptk.required' => 'NIP PPTK wajib diisi.',
-            'nip_pptk.unique' => 'NIP PPTK sudah digunakan.',
             'nama_pptk.required' => 'Nama PPTK wajib diisi.',
             'bidang_id.required' => 'Bidang wajib dipilih.',
             'bidang_id.exists' => 'Bidang tidak ditemukan.',
         ]);
 
+        // Check if PPTK with this NIP already exists
+        $existingPptk = Pptk::where('nip_pptk', $request->nip_pptk)->first();
+
+        if ($existingPptk) {
+            // Update existing PPTK with new values
+            $existingPptk->update([
+                'nama_pptk' => $request->nama_pptk,
+                'skpd_id' => $skpd->id,
+                'bidang_id' => $request->bidang_id,
+            ]);
+
+            // Update the linked User's username if it exists
+            if ($existingPptk->user) {
+                $existingPptk->user->update([
+                    'username' => $request->nip_pptk,
+                ]);
+            }
+
+            return redirect()->route('skpd.pptk.index')
+                ->with('success', 'PPTK berhasil diperbarui!');
+        }
+
+        // Create new PPTK if it doesn't exist
         Pptk::create([
             'nip_pptk' => $request->nip_pptk,
             'nama_pptk' => $request->nama_pptk,
@@ -826,47 +1084,187 @@ class SkpdDashboardController extends Controller
     }
 
     /**
-     * Update PPTK for sub-kegiatan.
+     * Show the form for creating a new kegiatan.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\JsonResponse
+     * @param  int  $program_id
+     * @return \Illuminate\View\View
      */
-    public function updateSubkegiatanPptk(Request $request)
+    public function kegiatanCreate($program_id)
     {
         if (!Auth::check()) {
-            return response()->json(['success' => false, 'message' => 'Silakan login terlebih dahulu.'], 401);
+            return redirect()->route('login')
+                ->with('error', 'Silakan login terlebih dahulu.');
         }
 
         $user = Auth::user();
         $skpd = Skpd::where('user_id', $user->id)->first();
 
         if (!$skpd) {
-            return response()->json(['success' => false, 'message' => 'Data SKPD tidak ditemukan.'], 404);
+            return back()->with('error', 'Data SKPD tidak ditemukan.');
+        }
+
+        $program = Program::where('id', $program_id)->where('kode_skpd', $skpd->kode_skpd)->firstOrFail();
+
+        return view('skpd.kegiatan.create', compact('program', 'skpd'));
+    }
+
+    /**
+     * Store a newly created kegiatan in storage.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function kegiatanStore(Request $request)
+    {
+        if (!Auth::check()) {
+            return redirect()->route('login')
+                ->with('error', 'Silakan login terlebih dahulu.');
+        }
+
+        $user = Auth::user();
+        $skpd = Skpd::where('user_id', $user->id)->first();
+
+        if (!$skpd) {
+            return back()->with('error', 'Data SKPD tidak ditemukan.');
+        }
+
+        $program = Program::where('id', $request->program_id)->where('kode_skpd', $skpd->kode_skpd)->first();
+
+        if (!$program) {
+            return back()->with('error', 'Program tidak ditemukan.');
         }
 
         $request->validate([
-            'subkegiatan_id' => 'required|integer',
-            'nip_pptk' => 'nullable|string|max:50',
+            'program_id' => 'required|exists:program,id',
+            'kode' => 'required|string|max:50|unique:kegiatan,kode,null,id,kode_program,' . $program->kode,
+            'nama' => 'required|string|max:255',
+        ], [
+            'program_id.required' => 'Program wajib dipilih.',
+            'program_id.exists' => 'Program tidak ditemukan.',
+            'kode.required' => 'Kode Kegiatan wajib diisi.',
+            'kode.unique' => 'Kode Kegiatan sudah digunakan untuk program ini.',
+            'nama.required' => 'Nama Kegiatan wajib diisi.',
         ]);
 
-        $subkegiatan = SubKegiatan::find($request->subkegiatan_id);
+        Kegiatan::create([
+            'kode_program' => $program->kode,
+            'kode' => $request->kode,
+            'nama' => $request->nama,
+        ]);
 
-        if (!$subkegiatan) {
-            return response()->json(['success' => false, 'message' => 'Sub-kegiatan tidak ditemukan.'], 404);
+        return redirect()->route('skpd.program.index')
+            ->with('success', 'Kegiatan berhasil ditambahkan!');
+    }
+
+    /**
+     * Show the form for editing the specified kegiatan.
+     *
+     * @param  int  $id
+     * @return \Illuminate\View\View
+     */
+    public function kegiatanEdit($id)
+    {
+        if (!Auth::check()) {
+            return redirect()->route('login')
+                ->with('error', 'Silakan login terlebih dahulu.');
         }
 
-        // Verify the subkegiatan belongs to the user's SKPD
-        $kegiatan = Kegiatan::where('kode', $subkegiatan->kode_kegiatan)->first();
-        $program = Program::where('kode', $kegiatan->kode_program)->first();
+        $user = Auth::user();
+        $skpd = Skpd::where('user_id', $user->id)->first();
 
-        if ($program->kode_skpd !== $skpd->kode_skpd) {
-            return response()->json(['success' => false, 'message' => 'Anda tidak memiliki akses ke sub-kegiatan ini.'], 403);
+        if (!$skpd) {
+            return back()->with('error', 'Data SKPD tidak ditemukan.');
         }
 
-        // Update PPTK
-        $subkegiatan->nip_pptk = $request->nip_pptk;
-        $subkegiatan->save();
+        $kegiatan = Kegiatan::find($id);
 
-        return response()->json(['success' => true, 'message' => 'PPTK berhasil diperbarui!']);
+        if (!$kegiatan) {
+            return back()->with('error', 'Kegiatan tidak ditemukan.');
+        }
+
+        $program = Program::where('kode', $kegiatan->kode_program)->where('kode_skpd', $skpd->kode_skpd)->firstOrFail();
+
+        return view('skpd.kegiatan.edit', compact('kegiatan', 'program', 'skpd'));
+    }
+
+    /**
+     * Update the specified kegiatan in storage.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  int  $id
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function kegiatanUpdate(Request $request, $id)
+    {
+        if (!Auth::check()) {
+            return redirect()->route('login')
+                ->with('error', 'Silakan login terlebih dahulu.');
+        }
+
+        $user = Auth::user();
+        $skpd = Skpd::where('user_id', $user->id)->first();
+
+        if (!$skpd) {
+            return back()->with('error', 'Data SKPD tidak ditemukan.');
+        }
+
+        $kegiatan = Kegiatan::find($id);
+
+        if (!$kegiatan) {
+            return back()->with('error', 'Kegiatan tidak ditemukan.');
+        }
+
+        $program = Program::where('kode', $kegiatan->kode_program)->where('kode_skpd', $skpd->kode_skpd)->firstOrFail();
+
+        $request->validate([
+            'kode' => 'required|string|max:50|unique:kegiatan,kode,' . $id . ',id,kode_program,' . $program->kode,
+            'nama' => 'required|string|max:255',
+        ], [
+            'kode.required' => 'Kode Kegiatan wajib diisi.',
+            'kode.unique' => 'Kode Kegiatan sudah digunakan untuk program ini.',
+            'nama.required' => 'Nama Kegiatan wajib diisi.',
+        ]);
+
+        $kegiatan->update([
+            'kode' => $request->kode,
+            'nama' => $request->nama,
+        ]);
+
+        return redirect()->route('skpd.program.index')
+            ->with('success', 'Kegiatan berhasil diperbarui!');
+    }
+
+    /**
+     * Remove the specified kegiatan from storage.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function kegiatanDestroy($id)
+    {
+        if (!Auth::check()) {
+            return redirect()->route('login')
+                ->with('error', 'Silakan login terlebih dahulu.');
+        }
+
+        $user = Auth::user();
+        $skpd = Skpd::where('user_id', $user->id)->first();
+
+        if (!$skpd) {
+            return back()->with('error', 'Data SKPD tidak ditemukan.');
+        }
+
+        $kegiatan = Kegiatan::find($id);
+
+        if (!$kegiatan) {
+            return back()->with('error', 'Kegiatan tidak ditemukan.');
+        }
+
+        $program = Program::where('kode', $kegiatan->kode_program)->where('kode_skpd', $skpd->kode_skpd)->firstOrFail();
+
+        $kegiatan->delete();
+
+        return redirect()->route('skpd.program.index')
+            ->with('success', 'Kegiatan berhasil dihapus!');
     }
 }
