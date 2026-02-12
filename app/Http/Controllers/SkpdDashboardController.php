@@ -179,7 +179,7 @@ class SkpdDashboardController extends Controller
             return back()->with('error', 'Data SKPD tidak ditemukan.');
         }
 
-        // $kegiatan = Kegiatan::where('id', $kegiatan_id)->firstOrFail();
+        $kegiatan = Kegiatan::where('id', $kegiatan_id)->firstOrFail();
 
         // // Verify kegiatan belongs to SKPD
         // $program = Program::where('kode', $kegiatan->kode_program)->first();
@@ -210,7 +210,7 @@ class SkpdDashboardController extends Controller
             return back()->with('error', 'Data SKPD tidak ditemukan.');
         }
 
-        // $kegiatan = Kegiatan::where('id', $request->kegiatan_id)->firstOrFail();
+        $kegiatan = Kegiatan::where('id', $request->kegiatan_id)->firstOrFail();
 
         // // Verify kegiatan belongs to SKPD
         // $program = Program::where('kode', $kegiatan->kode_program)->first();
