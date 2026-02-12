@@ -749,6 +749,13 @@ class SkpdDashboardController extends Controller
             'bidang_id' => $request->bidang_id,
         ]);
 
+        // Update User's name if PPTK has a user
+        if ($pptk->user) {
+            $pptk->user->update([
+                'name' => $request->nama_pptk,
+            ]);
+        }
+
         return redirect()->route('skpd.pptk.index')
             ->with('success', 'PPTK berhasil diperbarui!');
     }
