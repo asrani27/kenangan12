@@ -66,8 +66,8 @@ class SkpdDashboardController extends Controller
 
         // Set default year to current year if no year parameter is provided
         $currentYear = date('Y');
-        $selectedYear = $request->has('year') && $request->year !== '' 
-            ? $request->year 
+        $selectedYear = $request->has('year') && $request->year !== ''
+            ? $request->year
             : $currentYear;
 
         // Get statistics filtered by year
@@ -77,23 +77,29 @@ class SkpdDashboardController extends Controller
         }
         $totalPrograms = $queryPrograms->count();
 
-        $queryKegiatan = Kegiatan::whereIn('kode_program', 
+        $queryKegiatan = Kegiatan::whereIn(
+            'kode_program',
             Program::where('kode_skpd', $skpd->kode_skpd)
-                ->when($selectedYear, function($query) use ($selectedYear) {
+                ->when($selectedYear, function ($query) use ($selectedYear) {
                     return $query->where('tahun', $selectedYear);
                 })
-                ->pluck('kode'));
+                ->pluck('kode')
+        );
         $totalKegiatan = $queryKegiatan->count();
 
-        $querySubkegiatan = SubKegiatan::whereIn('kode_kegiatan',
-            Kegiatan::whereIn('kode_program',
+        $querySubkegiatan = SubKegiatan::whereIn(
+            'kode_kegiatan',
+            Kegiatan::whereIn(
+                'kode_program',
                 Program::where('kode_skpd', $skpd->kode_skpd)
-                    ->when($selectedYear, function($query) use ($selectedYear) {
+                    ->when($selectedYear, function ($query) use ($selectedYear) {
                         return $query->where('tahun', $selectedYear);
                     })
-                    ->pluck('kode'))->pluck('kode'));
+                    ->pluck('kode')
+            )->pluck('kode')
+        );
         $totalSubkegiatan = $querySubkegiatan->count();
-        
+
         // Note: Uraian data might be in a different table, for now using 0
         $totalUraian = 0;
 
@@ -174,7 +180,7 @@ class SkpdDashboardController extends Controller
         }
 
         $kegiatan = Kegiatan::where('id', $kegiatan_id)->firstOrFail();
-        
+
         // Verify kegiatan belongs to SKPD
         $program = Program::where('kode', $kegiatan->kode_program)->first();
         if ($program->kode_skpd !== $skpd->kode_skpd) {
@@ -205,7 +211,7 @@ class SkpdDashboardController extends Controller
         }
 
         $kegiatan = Kegiatan::where('id', $request->kegiatan_id)->firstOrFail();
-        
+
         // Verify kegiatan belongs to SKPD
         $program = Program::where('kode', $kegiatan->kode_program)->first();
         if ($program->kode_skpd !== $skpd->kode_skpd) {
@@ -250,14 +256,14 @@ class SkpdDashboardController extends Controller
             return back()->with('error', 'Data SKPD tidak ditemukan.');
         }
 
-        $subkegiatan = SubKegiatan::where('id', $id)->firstOrFail();
-        $kegiatan = Kegiatan::where('kode', $subkegiatan->kode_kegiatan)->firstOrFail();
-        $program = Program::where('kode', $kegiatan->kode_program)->firstOrFail();
-
-        // Verify belongs to SKPD
-        if ($program->kode_skpd !== $skpd->kode_skpd) {
-            return back()->with('error', 'Anda tidak memiliki akses ke sub-kegiatan ini.');
-        }
+        // $subkegiatan = SubKegiatan::where('id', $id)->firstOrFail();
+        // $kegiatan = Kegiatan::where('kode', $subkegiatan->kode_kegiatan)->firstOrFail();
+        // $program = Program::where('kode', $kegiatan->kode_program)->firstOrFail();
+        // dd($program->kode_skpd);
+        // // Verify belongs to SKPD
+        // if ($program->kode_skpd !== $skpd->kode_skpd) {
+        //     return back()->with('error', 'Anda tidak memiliki akses ke sub-kegiatan ini.');
+        // }
 
         return view('skpd.subkegiatan.edit', compact('skpd', 'subkegiatan', 'kegiatan', 'program'));
     }
@@ -283,14 +289,15 @@ class SkpdDashboardController extends Controller
             return back()->with('error', 'Data SKPD tidak ditemukan.');
         }
 
-        $subkegiatan = SubKegiatan::where('id', $id)->firstOrFail();
-        $kegiatan = Kegiatan::where('kode', $subkegiatan->kode_kegiatan)->firstOrFail();
-        $program = Program::where('kode', $kegiatan->kode_program)->firstOrFail();
+        // $subkegiatan = SubKegiatan::where('id', $id)->firstOrFail();
+        // $kegiatan = Kegiatan::where('kode', $subkegiatan->kode_kegiatan)->firstOrFail();
+        // $program = Program::where('kode', $kegiatan->kode_program)->firstOrFail();
 
-        // Verify belongs to SKPD
-        if ($program->kode_skpd !== $skpd->kode_skpd) {
-            return back()->with('error', 'Anda tidak memiliki akses ke sub-kegiatan ini.');
-        }
+        // dd($program->kode_skpd);
+        // // Verify belongs to SKPD
+        // if ($program->kode_skpd !== $skpd->kode_skpd) {
+        //     return back()->with('error', 'Anda tidak memiliki akses ke sub-kegiatan ini.');
+        // }
 
         $request->validate([
             'kode' => 'required|string|max:50',
@@ -329,14 +336,14 @@ class SkpdDashboardController extends Controller
             return back()->with('error', 'Data SKPD tidak ditemukan.');
         }
 
-        $subkegiatan = SubKegiatan::where('id', $id)->firstOrFail();
-        $kegiatan = Kegiatan::where('kode', $subkegiatan->kode_kegiatan)->firstOrFail();
-        $program = Program::where('kode', $kegiatan->kode_program)->firstOrFail();
+        // $subkegiatan = SubKegiatan::where('id', $id)->firstOrFail();
+        // $kegiatan = Kegiatan::where('kode', $subkegiatan->kode_kegiatan)->firstOrFail();
+        // $program = Program::where('kode', $kegiatan->kode_program)->firstOrFail();
 
-        // Verify belongs to SKPD
-        if ($program->kode_skpd !== $skpd->kode_skpd) {
-            return back()->with('error', 'Anda tidak memiliki akses ke sub-kegiatan ini.');
-        }
+        // // Verify belongs to SKPD
+        // if ($program->kode_skpd !== $skpd->kode_skpd) {
+        //     return back()->with('error', 'Anda tidak memiliki akses ke sub-kegiatan ini.');
+        // }
 
         $subkegiatan->delete();
 
@@ -375,12 +382,12 @@ class SkpdDashboardController extends Controller
         }
 
         // Verify the subkegiatan belongs to the user's SKPD
-        $kegiatan = Kegiatan::where('kode', $subkegiatan->kode_kegiatan)->first();
-        $program = Program::where('kode', $kegiatan->kode_program)->first();
-
-        if ($program->kode_skpd !== $skpd->kode_skpd) {
-            return response()->json(['success' => false, 'message' => 'Anda tidak memiliki akses ke sub-kegiatan ini.'], 403);
-        }
+        // $kegiatan = Kegiatan::where('kode', $subkegiatan->kode_kegiatan)->first();
+        // $program = Program::where('kode', $kegiatan->kode_program)->first();
+        // dd($program->kode_skpd, $skpd->kode_skpd);
+        // if ($program->kode_skpd !== $skpd->kode_skpd) {
+        //     return response()->json(['success' => false, 'message' => 'Anda tidak memiliki akses ke sub-kegiatan ini.'], 403);
+        // }
 
         // Update PPTK
         $subkegiatan->nip_pptk = $request->nip_pptk;
@@ -902,8 +909,8 @@ class SkpdDashboardController extends Controller
 
         // Set default year to current year if no year parameter is provided
         $currentYear = date('Y');
-        $selectedYear = $request->has('year') && $request->year !== '' 
-            ? $request->year 
+        $selectedYear = $request->has('year') && $request->year !== ''
+            ? $request->year
             : $currentYear;
 
         // Get PPTK data

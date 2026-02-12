@@ -150,7 +150,8 @@
                 </tr>
 
                 @if($kegiatan->sub_kegiatan && $kegiatan->sub_kegiatan->count() > 0)
-                @foreach($kegiatan->sub_kegiatan as $subKegiatan)
+
+                @foreach($kegiatan->sub_kegiatan->where('kode_skpd', $skpd->kode_skpd) as $subKegiatan)
                 <tr class="bg-slate-700/20">
                     <td class="py-2 text-sm text-slate-400"></td>
                     <td class="py-2 text-sm text-slate-300 font-mono">{{ $subKegiatan->kode }}</td>
