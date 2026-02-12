@@ -228,6 +228,9 @@ class SkpdDashboardController extends Controller
 
         SubKegiatan::create([
             'kode' => $request->kode,
+            'kode_program' => $program->kode,
+            'kode_skpd' => $program->kode_skpd,
+            'tahun' => $program->tahun,
             'kode_kegiatan' => $kegiatan->kode,
             'nama' => $request->nama,
         ]);
@@ -289,15 +292,14 @@ class SkpdDashboardController extends Controller
             return back()->with('error', 'Data SKPD tidak ditemukan.');
         }
 
-        // $subkegiatan = SubKegiatan::where('id', $id)->firstOrFail();
-        // $kegiatan = Kegiatan::where('kode', $subkegiatan->kode_kegiatan)->firstOrFail();
-        // $program = Program::where('kode', $kegiatan->kode_program)->firstOrFail();
+        $subkegiatan = SubKegiatan::where('id', $id)->firstOrFail();
+        $kegiatan = Kegiatan::where('kode', $subkegiatan->kode_kegiatan)->firstOrFail();
+        $program = Program::where('kode', $kegiatan->kode_program)->firstOrFail();
 
-        // dd($program->kode_skpd);
-        // // Verify belongs to SKPD
-        // if ($program->kode_skpd !== $skpd->kode_skpd) {
-        //     return back()->with('error', 'Anda tidak memiliki akses ke sub-kegiatan ini.');
-        // }
+        // Verify belongs to SKPD
+        if ($program->kode_skpd !== $skpd->kode_skpd) {
+            return back()->with('error', 'Anda tidak memiliki akses ke sub-kegiatan ini.');
+        }
 
         $request->validate([
             'kode' => 'required|string|max:50',
@@ -336,14 +338,14 @@ class SkpdDashboardController extends Controller
             return back()->with('error', 'Data SKPD tidak ditemukan.');
         }
 
-        // $subkegiatan = SubKegiatan::where('id', $id)->firstOrFail();
-        // $kegiatan = Kegiatan::where('kode', $subkegiatan->kode_kegiatan)->firstOrFail();
-        // $program = Program::where('kode', $kegiatan->kode_program)->firstOrFail();
+        $subkegiatan = SubKegiatan::where('id', $id)->firstOrFail();
+        $kegiatan = Kegiatan::where('kode', $subkegiatan->kode_kegiatan)->firstOrFail();
+        $program = Program::where('kode', $kegiatan->kode_program)->firstOrFail();
 
-        // // Verify belongs to SKPD
-        // if ($program->kode_skpd !== $skpd->kode_skpd) {
-        //     return back()->with('error', 'Anda tidak memiliki akses ke sub-kegiatan ini.');
-        // }
+        // Verify belongs to SKPD
+        if ($program->kode_skpd !== $skpd->kode_skpd) {
+            return back()->with('error', 'Anda tidak memiliki akses ke sub-kegiatan ini.');
+        }
 
         $subkegiatan->delete();
 
