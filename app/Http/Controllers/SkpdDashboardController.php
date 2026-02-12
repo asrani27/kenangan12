@@ -181,7 +181,9 @@ class SkpdDashboardController extends Controller
 
         $kegiatan = Kegiatan::where('id', $kegiatan_id)->firstOrFail();
 
-        if ($kegiatan->kode_skpd !== $skpd->kode_skpd) {
+        // Verify kegiatan belongs to SKPD
+        $program = Program::where('kode', $kegiatan->kode_program)->where('kode_skpd', $skpd->kode_skpd)->first();
+        if (!$program) {
             return back()->with('error', 'Anda tidak memiliki akses ke kegiatan ini.');
         }
 
