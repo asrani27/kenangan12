@@ -181,11 +181,9 @@ class SkpdDashboardController extends Controller
 
         $kegiatan = Kegiatan::where('id', $kegiatan_id)->firstOrFail();
 
-        // // Verify kegiatan belongs to SKPD
-        $program = Program::where('kode', $kegiatan->kode_program)->first();
-        // if ($program->kode_skpd !== $skpd->kode_skpd) {
-        //     return back()->with('error', 'Anda tidak memiliki akses ke kegiatan ini.');
-        // }
+        if ($kegiatan->kode_skpd !== $skpd->kode_skpd) {
+            return back()->with('error', 'Anda tidak memiliki akses ke kegiatan ini.');
+        }
 
         return view('skpd.subkegiatan.create', compact('skpd', 'kegiatan', 'program'));
     }
@@ -212,11 +210,9 @@ class SkpdDashboardController extends Controller
 
         $kegiatan = Kegiatan::where('id', $request->kegiatan_id)->firstOrFail();
 
-        // // Verify kegiatan belongs to SKPD
-        $program = Program::where('kode', $kegiatan->kode_program)->first();
-        // if ($program->kode_skpd !== $skpd->kode_skpd) {
-        //     return back()->with('error', 'Anda tidak memiliki akses ke kegiatan ini.');
-        // }
+        if ($kegiatan->kode_skpd !== $skpd->kode_skpd) {
+            return back()->with('error', 'Anda tidak memiliki akses ke kegiatan ini.');
+        }
 
         $request->validate([
             'kode' => 'required|string|max:50',
@@ -228,9 +224,9 @@ class SkpdDashboardController extends Controller
 
         SubKegiatan::create([
             'kode' => $request->kode,
-            'kode_program' => $program->kode,
-            'kode_skpd' => $program->kode_skpd,
-            'tahun' => $program->tahun,
+            'kode_program' => $kegiatan->kode_program,
+            'kode_skpd' => $kegiatan->kode_skpd,
+            'tahun' => $kegiatan->tahun,
             'kode_kegiatan' => $kegiatan->kode,
             'nama' => $request->nama,
         ]);
@@ -259,14 +255,14 @@ class SkpdDashboardController extends Controller
             return back()->with('error', 'Data SKPD tidak ditemukan.');
         }
 
-        // $subkegiatan = SubKegiatan::where('id', $id)->firstOrFail();
-        // $kegiatan = Kegiatan::where('kode', $subkegiatan->kode_kegiatan)->firstOrFail();
-        // $program = Program::where('kode', $kegiatan->kode_program)->firstOrFail();
-        // dd($program->kode_skpd);
-        // // Verify belongs to SKPD
-        // if ($program->kode_skpd !== $skpd->kode_skpd) {
-        //     return back()->with('error', 'Anda tidak memiliki akses ke sub-kegiatan ini.');
-        // }
+        $subkegiatan = SubKegiatan::where('id', $id)->firstOrFail();
+        $kegiatan = Kegiatan::where('kode', $subkegiatan->kode_kegiatan)->firstOrFail();
+        $program = Program::where('kode', $kegiatan->kode_program)->firstOrFail();
+
+        // Verify belongs to SKPD
+        if ($subkegiatan->kode_skpd !== $skpd->kode_skpd) {
+            return back()->with('error', 'Anda tidak memiliki akses ke sub-kegiatan ini.');
+        }
 
         return view('skpd.subkegiatan.edit', compact('skpd', 'subkegiatan', 'kegiatan', 'program'));
     }
@@ -297,7 +293,7 @@ class SkpdDashboardController extends Controller
         $program = Program::where('kode', $kegiatan->kode_program)->firstOrFail();
 
         // Verify belongs to SKPD
-        if ($program->kode_skpd !== $skpd->kode_skpd) {
+        if ($subkegiatan->kode_skpd !== $skpd->kode_skpd) {
             return back()->with('error', 'Anda tidak memiliki akses ke sub-kegiatan ini.');
         }
 
@@ -343,7 +339,7 @@ class SkpdDashboardController extends Controller
         $program = Program::where('kode', $kegiatan->kode_program)->firstOrFail();
 
         // Verify belongs to SKPD
-        if ($program->kode_skpd !== $skpd->kode_skpd) {
+        if ($subkegiatan->kode_skpd !== $skpd->kode_skpd) {
             return back()->with('error', 'Anda tidak memiliki akses ke sub-kegiatan ini.');
         }
 
@@ -384,12 +380,11 @@ class SkpdDashboardController extends Controller
         }
 
         // Verify the subkegiatan belongs to the user's SKPD
-        // $kegiatan = Kegiatan::where('kode', $subkegiatan->kode_kegiatan)->first();
-        // $program = Program::where('kode', $kegiatan->kode_program)->first();
-        // dd($program->kode_skpd, $skpd->kode_skpd);
-        // if ($program->kode_skpd !== $skpd->kode_skpd) {
-        //     return response()->json(['success' => false, 'message' => 'Anda tidak memiliki akses ke sub-kegiatan ini.'], 403);
-        // }
+        $kegiatan = Kegiatan::where('kode', $subkegiatan->kode_kegiatan)->first();
+        $program = Program::where('kode', $kegiatan->kode_program)->first();
+        if ($subkegiatan->kode_skpd !== $skpd->kode_skpd) {
+            return response()->json(['success' => false, 'message' => 'Anda tidak memiliki akses ke sub-kegiatan ini.'], 403);
+        }
 
         // Update PPTK
         $subkegiatan->nip_pptk = $request->nip_pptk;
@@ -1159,6 +1154,8 @@ class SkpdDashboardController extends Controller
             'kode_program' => $program->kode,
             'kode' => $request->kode,
             'nama' => $request->nama,
+            'kode_skpd' => $program->kode_skpd,
+            'tahun' => $program->tahun,
         ]);
 
         return redirect()->route('skpd.program.index')
