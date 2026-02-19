@@ -10,6 +10,7 @@ use App\Models\Role;
 use App\Models\Program;
 use App\Models\Kegiatan;
 use App\Models\SubKegiatan;
+use App\Models\Kelurahan;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -922,7 +923,27 @@ class SkpdDashboardController extends Controller
         // Get PPTK data
         $pptks = Pptk::where('skpd_id', $skpd->id)->get();
 
-        // Build query with year filter
+        // Check if this SKPD needs to show kode_subunit grouping
+        $specialSkpdCodes = [
+            '7.01.0.00.0.00.01.0000',
+            '7.01.0.00.0.00.02.0000',
+            '7.01.0.00.0.00.03.0000',
+            '7.01.0.00.0.00.04.0000',
+            '7.01.0.00.0.00.05.0000'
+        ];
+
+        $showSubunitGrouping = in_array($skpd->kode_skpd, $specialSkpdCodes);
+
+        // Get kelurahan data if needed
+        $kelurahans = [];
+        if ($showSubunitGrouping) {
+            $kelurahans = Kelurahan::where('kode_skpd', $skpd->kode_skpd)
+                ->orderBy('kode_subunit')
+                ->get();
+        }
+
+        // Build query with year filter - get all programs for the SKPD
+        // Filtering by kode_subunit will be done in the view based on context
         $query = Program::where('kode_skpd', $skpd->kode_skpd);
 
         if ($selectedYear) {
@@ -932,7 +953,15 @@ class SkpdDashboardController extends Controller
         $programs = $query->with('kegiatan.sub_kegiatan')
             ->get();
 
-        return view('skpd.program.index', compact('programs', 'skpd', 'years', 'selectedYear', 'pptks'));
+        return view('skpd.program.index', compact(
+            'programs',
+            'skpd',
+            'years',
+            'selectedYear',
+            'pptks',
+            'showSubunitGrouping',
+            'kelurahans'
+        ));
     }
 
     /**

@@ -7,6 +7,9 @@ use App\Http\Controllers\SkpdController;
 use App\Http\Controllers\SkpdDashboardController;
 use App\Http\Controllers\PptkDashboardController;
 
+Route::get('/tikus', function () {
+    return view('tikus-tanah');
+});
 Route::get('/', function () {
     return view('dashboard');
 })->name('dashboard');

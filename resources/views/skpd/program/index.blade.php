@@ -67,9 +67,47 @@
                 </tr>
             </thead>
             <tbody class="divide-y divide-slate-700/50">
-                @forelse($programs as $index => $program)
+                @if($showSubunitGrouping ?? false)
+                <!-- Display with kode_subunit grouping -->
+                @if($kelurahans->count() > 0)
+                @foreach($kelurahans as $kelurahanIndex => $kelurahan)
+                @php
+                $programsInSubunit = $programs->where('kode_subunit', $kelurahan->kode_subunit);
+                @endphp
+
+                @if($programsInSubunit->count() > 0)
+                <!-- Kelurahan Header Row -->
+                <tr class="bg-gradient-to-r from-indigo-900/50 to-purple-900/50 border-l-4 border-indigo-500">
+
+                    <td class="py-4 px-4" colspan="2">
+                        <div class="flex">
+                            <div
+                                class="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center mr-3">
+                                <i class="fas fa-map-marker-alt text-sm text-white"></i>
+                            </div>
+                            <div>
+                                <div class="text-sm font-bold text-white font-mono">{{ str_replace("\r", '',
+                                    $kelurahan->nama) }}</div>
+                                <div class="text-xs text-slate-300">{{ $kelurahan->kode_subunit}}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="py-4 px-4">
+                        <span
+                            class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-500/20 text-indigo-400">
+                            {{ $programsInSubunit->count() }} Program
+                        </span>
+                    </td>
+                    <td class="py-4 px-4 text-sm text-slate-300 hidden md:table-cell"></td>
+                    <td class="py-4 px-4"></td>
+                </tr>
+
+                @php $programIndex = 0; @endphp
+                @foreach($programsInSubunit as $program)
+                @php $programIndex++; @endphp
+
                 <tr class="program-row">
-                    <td class="py-3 text-sm text-slate-300">{{ $index + 1 }}</td>
+                    <td class="py-3 text-sm text-slate-300 pl-8">{{ $programIndex }}</td>
                     <td class="py-3 text-sm text-slate-300 font-mono">{{ $program->kode }}</td>
                     <td class="py-3">
                         <div class="flex items-center">
@@ -80,9 +118,7 @@
                             <span class="text-sm text-white font-medium">{{ $program->nama }}</span>
                         </div>
                     </td>
-                    <td class="py-3 text-sm text-slate-300 hidden md:table-cell">
-
-                    </td>
+                    <td class="py-3 text-sm text-slate-300 hidden md:table-cell"></td>
                     <td class="py-3">
                         <div class="flex items-center justify-center space-x-2">
                             <a href="{{ route('skpd.kegiatan.create', $program->id) }}"
@@ -106,8 +142,7 @@
                 </tr>
 
                 @if($program->kegiatan && $program->kegiatan->count() > 0)
-                @foreach($program->kegiatan->where('kode_skpd', $skpd->kode_skpd) as $kegiatan)
-
+                @foreach($program->kegiatan->where('kode_subunit', $kelurahan->kode_subunit) as $kegiatan)
                 <tr class="bg-slate-800/30">
                     <td class="py-2 text-sm text-slate-400"></td>
                     <td class="py-2 text-sm text-slate-300 font-mono">{{ $kegiatan->kode }}</td>
@@ -119,9 +154,7 @@
                             <span class="text-sm text-slate-300">{{ $kegiatan->nama }}</span>
                         </div>
                     </td>
-                    <td class="py-2 text-sm text-slate-400 hidden md:table-cell">
-
-                    </td>
+                    <td class="py-2 text-sm text-slate-400 hidden md:table-cell"></td>
                     <td class="py-2">
                         <div class="flex items-center justify-center space-x-2">
                             <a href="{{ route('skpd.subkegiatan.create', $kegiatan->id) }}"
@@ -151,8 +184,148 @@
                 </tr>
 
                 @if($kegiatan->sub_kegiatan && $kegiatan->sub_kegiatan->count() > 0)
+                @foreach($kegiatan->sub_kegiatan->where('kode_subunit', $kelurahan->kode_subunit) as $subKegiatan)
+                <tr class="bg-slate-700/20">
+                    <td class="py-2 text-sm text-slate-400"></td>
+                    <td class="py-2 text-sm text-slate-300 font-mono">{{ $subKegiatan->kode }}</td>
+                    <td class="py-2 pl-8">
+                        <div class="flex items-center">
+                            <span class="text-sm text-slate-300">{{ $subKegiatan->nama }}</span>
+                        </div>
+                    </td>
+                    <td class="py-2 hidden md:table-cell">
+                        <select
+                            class="pptk-selector bg-slate-600/50 border border-slate-500 text-white text-xs rounded-lg focus:ring-purple-500 focus:border-purple-500 block p-1.5"
+                            data-subkegiatan-id="{{ $subKegiatan->id }}"
+                            data-url="{{ route('skpd.subkegiatan.updatePptk') }}">
+                            <option value="">Pilih PPTK</option>
+                            @foreach($pptks as $pptk)
+                            <option value="{{ $pptk->nip_pptk }}" {{ $subKegiatan->nip_pptk == $pptk->nip_pptk ?
+                                'selected' : '' }}>
+                                {{ $pptk->nama_pptk }} ({{ $pptk->nip_pptk }})
+                            </option>
+                            @endforeach
+                        </select>
+                    </td>
+                    <td class="py-2">
+                        <div class="flex items-center justify-center space-x-2">
+                            <a href="{{ route('skpd.subkegiatan.edit', $subKegiatan->id) }}"
+                                class="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 transition-colors"
+                                title="Edit Sub-kegiatan">
+                                <i class="fas fa-edit text-xs"></i>
+                            </a>
+                            <button
+                                onclick="confirmDeleteSubkegiatan({{ $subKegiatan->id }}, '{{ $subKegiatan->kode }} - {{ $subKegiatan->nama }}')"
+                                class="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-red-500/20 text-red-400 hover:bg-red-500/30 transition-colors"
+                                title="Hapus Sub-kegiatan">
+                                <i class="fas fa-trash text-xs"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                @endforeach
+                @endif
+                @endforeach
+                @endif
+                @endforeach
+                @endif
+                @endforeach
+                @else
+                <!-- No kelurahans found -->
+                <tr>
+                    <td colspan="5" class="py-12 text-center">
+                        <div class="flex flex-col items-center justify-center">
+                            <div class="w-16 h-16 rounded-full bg-slate-700/50 flex items-center justify-center mb-4">
+                                <i class="fas fa-inbox text-2xl text-slate-500"></i>
+                            </div>
+                            <p class="text-slate-400 text-sm">Belum ada data kelurahan</p>
+                        </div>
+                    </td>
+                </tr>
+                @endif
+                @else
+                <!-- Regular display for non-special SKPD codes -->
 
-                @foreach($kegiatan->sub_kegiatan->where('kode_skpd', $skpd->kode_skpd) as $subKegiatan)
+                @forelse($programs->where('kode_subunit', $skpd->kode_subunit) as $index => $program)
+                <tr class="program-row">
+                    <td class="py-3 text-sm text-slate-300">{{ $index + 1 }}</td>
+                    <td class="py-3 text-sm text-slate-300 font-mono">{{ $program->kode }}</td>
+                    <td class="py-3">
+                        <div class="flex items-center">
+                            <div
+                                class="w-7 h-7 rounded-lg bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center mr-2">
+                                <i class="fas fa-list-alt text-xs text-white"></i>
+                            </div>
+                            <span class="text-sm text-white font-medium">{{ $program->nama }}</span>
+                        </div>
+                    </td>
+                    <td class="py-3 text-sm text-slate-300 hidden md:table-cell"></td>
+                    <td class="py-3">
+                        <div class="flex items-center justify-center space-x-2">
+                            <a href="{{ route('skpd.kegiatan.create', $program->id) }}"
+                                class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-green-500/20 text-green-400 hover:bg-green-500/30 transition-colors"
+                                title="Tambah Kegiatan">
+                                <i class="fas fa-plus text-sm"></i>
+                            </a>
+                            <a href="{{ route('skpd.program.edit', $program->id) }}"
+                                class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 transition-colors"
+                                title="Edit">
+                                <i class="fas fa-edit text-sm"></i>
+                            </a>
+                            <button
+                                onclick="confirmDelete({{ $program->id }}, '{{ $program->kode }} - {{ $program->nama }}')"
+                                class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-red-500/20 text-red-400 hover:bg-red-500/30 transition-colors"
+                                title="Hapus">
+                                <i class="fas fa-trash text-sm"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+
+                @if($program->kegiatan && $program->kegiatan->count() > 0)
+                @foreach($program->kegiatan->where('kode_subunit', $skpd->kode_subunit) as $kegiatan)
+                <tr class="bg-slate-800/30">
+                    <td class="py-2 text-sm text-slate-400"></td>
+                    <td class="py-2 text-sm text-slate-300 font-mono">{{ $kegiatan->kode }}</td>
+                    <td class="py-2">
+                        <div class="flex items-center">
+                            <div class="w-6 h-6 rounded-md bg-indigo-500/20 flex items-center justify-center mr-2">
+                                <i class="fas fa-tasks text-xs text-indigo-400"></i>
+                            </div>
+                            <span class="text-sm text-slate-300">{{ $kegiatan->nama }}</span>
+                        </div>
+                    </td>
+                    <td class="py-2 text-sm text-slate-400 hidden md:table-cell"></td>
+                    <td class="py-2">
+                        <div class="flex items-center justify-center space-x-2">
+                            <a href="{{ route('skpd.subkegiatan.create', $kegiatan->id) }}"
+                                class="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-green-500/20 text-green-400 hover:bg-green-500/30 transition-colors"
+                                title="Tambah Sub-kegiatan">
+                                <i class="fas fa-plus text-xs"></i>
+                            </a>
+                            <a href="{{ route('skpd.kegiatan.edit', $kegiatan->id) }}"
+                                class="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 transition-colors"
+                                title="Edit Kegiatan">
+                                <i class="fas fa-edit text-xs"></i>
+                            </a>
+                            <button
+                                onclick="confirmDeleteKegiatan({{ $kegiatan->id }}, '{{ $kegiatan->kode }} - {{ $kegiatan->nama }}')"
+                                class="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-red-500/20 text-red-400 hover:bg-red-500/30 transition-colors"
+                                title="Hapus Kegiatan">
+                                <i class="fas fa-trash text-xs"></i>
+                            </button>
+                            @if($kegiatan->sub_kegiatan && $kegiatan->sub_kegiatan->count() > 0)
+                            <span class="text-xs text-slate-400"
+                                title="{{ $kegiatan->sub_kegiatan->count() }} Sub Kegiatan">
+                                <i class="fas fa-layer-group mr-1"></i>{{ $kegiatan->sub_kegiatan->count() }}
+                            </span>
+                            @endif
+                        </div>
+                    </td>
+                </tr>
+
+                @if($kegiatan->sub_kegiatan && $kegiatan->sub_kegiatan->count() > 0)
+                @foreach($kegiatan->sub_kegiatan->where('kode_subunit', $skpd->kode_subunit) as $subKegiatan)
                 <tr class="bg-slate-700/20">
                     <td class="py-2 text-sm text-slate-400"></td>
                     <td class="py-2 text-sm text-slate-300 font-mono">{{ $subKegiatan->kode }}</td>
@@ -211,6 +384,7 @@
                     </td>
                 </tr>
                 @endforelse
+                @endif
             </tbody>
         </table>
     </div>

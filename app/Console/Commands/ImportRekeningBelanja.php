@@ -64,15 +64,15 @@ class ImportRekeningBelanja extends Command
             $imported = 0;
             $skipped = 0;
             $error = 0;
-            
+
             $importedKegiatan = 0;
             $skippedKegiatan = 0;
             $errorKegiatan = 0;
-            
+
             $importedSubKegiatan = 0;
             $skippedSubKegiatan = 0;
             $errorSubKegiatan = 0;
-            
+
             $importedUraian = 0;
             $skippedUraian = 0;
             $errorUraian = 0;
@@ -89,34 +89,30 @@ class ImportRekeningBelanja extends Command
 
                     $tahun = $worksheet->getCellByColumnAndRow(2, $row)->getValue();
                     $kodeSkpd = $worksheet->getCellByColumnAndRow(5, $row)->getValue();
+                    $kodeSubunit = $worksheet->getCellByColumnAndRow(7, $row)->getValue();
                     $kode = $worksheet->getCellByColumnAndRow(11, $row)->getValue();
                     $nama = $worksheet->getCellByColumnAndRow(12, $row)->getValue();
 
                     // Validasi data wajib
-                    if (empty($tahun) || empty($kodeSkpd) || empty($kode)) {
-                        $this->warn("Baris {$row}: Data tidak lengkap, dilewati");
-                        $error++;
-                        continue;
-                    }
-                    
-                    // Import ke model Program (existing logic)
-                    $exists = Program::where('kode_skpd', $kodeSkpd)
+                    $checkProgram = Program::where('tahun', $tahun)
+                        ->where('kode_skpd', $kodeSkpd)
+                        ->where('kode_subunit', $kodeSubunit)
                         ->where('kode', $kode)
-                        ->exists();
-
-                    if ($exists) {
-                        $skipped++;
+                        ->first();
+                    if ($checkProgram == null) {
+                        Program::create(
+                            [
+                                'tahun' => $tahun,
+                                'kode_skpd' => $kodeSkpd,
+                                'kode_subunit' => $kodeSubunit,
+                                'kode' => $kode,
+                                'nama' => $nama,
+                            ]
+                        );
                     } else {
-                        Program::create([
-                            'tahun' => $tahun,
-                            'kode_skpd' => $kodeSkpd,
-                            'kode' => $kode,
-                            'nama' => $nama,
-                        ]);
-
-                        $imported++;
+                        $skipped++;
                     }
-                    
+
                     // Import ke model Kegiatan
                     // Mapping kolom sesuai spesifikasi:
                     // tahun = Kolom B (index 1)
@@ -124,38 +120,33 @@ class ImportRekeningBelanja extends Command
                     // kode_program = Kolom K (index 10)
                     // kode = Kolom M (index 12)
                     // nama = Kolom N (index 13)
-                    
+
                     $kodeProgram = $worksheet->getCellByColumnAndRow(11, $row)->getValue();
                     $kodeKegiatan = $worksheet->getCellByColumnAndRow(13, $row)->getValue();
                     $namaKegiatan = $worksheet->getCellByColumnAndRow(14, $row)->getValue();
-                    
-                    // Cek apakah data Kegiatan sudah ada
-                    $existsKegiatan = Kegiatan::where('tahun', $tahun)
+
+                    // Validasi data wajib untuk Kegiatan
+                    $checkKegiatan = Kegiatan::where('tahun', $tahun)
                         ->where('kode_skpd', $kodeSkpd)
+                        ->where('kode_subunit', $kodeSubunit)
                         ->where('kode_program', $kodeProgram)
                         ->where('kode', $kodeKegiatan)
-                        ->exists();
-
-                    if ($existsKegiatan) {
-                        $skippedKegiatan++;
-                    } else {
-                        // Validasi data wajib untuk Kegiatan
-                        if (!empty($tahun) && !empty($kodeSkpd) && !empty($kodeProgram) && !empty($kodeKegiatan)) {
-                            Kegiatan::create([
+                        ->first();
+                    if ($checkKegiatan == null) {
+                        Kegiatan::create(
+                            [
                                 'tahun' => $tahun,
                                 'kode_skpd' => $kodeSkpd,
+                                'kode_subunit' => $kodeSubunit,
                                 'kode_program' => $kodeProgram,
                                 'kode' => $kodeKegiatan,
                                 'nama' => $namaKegiatan,
-                            ]);
-
-                            $importedKegiatan++;
-                        } else {
-                            $this->warn("Baris {$row}: Data Kegiatan tidak lengkap, dilewati");
-                            $errorKegiatan++;
-                        }
+                            ]
+                        );
+                    } else {
+                        $skippedKegiatan++;
                     }
-                    
+
                     // Import ke model SubKegiatan
                     // Mapping kolom sesuai spesifikasi:
                     // tahun = Kolom B (index 1)
@@ -164,41 +155,36 @@ class ImportRekeningBelanja extends Command
                     // kode_kegiatan = Kolom M (index 12)
                     // kode = Kolom O (index 14)
                     // nama = Kolom P (index 15)
-                    
+
                     $kodeProgramSub = $worksheet->getCellByColumnAndRow(11, $row)->getValue();
                     $kodeKegiatanSub = $worksheet->getCellByColumnAndRow(13, $row)->getValue();
                     $kodeSubKegiatan = $worksheet->getCellByColumnAndRow(15, $row)->getValue();
                     $namaSubKegiatan = $worksheet->getCellByColumnAndRow(16, $row)->getValue();
-                    
-                    // Cek apakah data SubKegiatan sudah ada
-                    $existsSubKegiatan = SubKegiatan::where('tahun', $tahun)
+
+                    // Validasi data wajib untuk SubKegiatan
+                    $checkSubKegiatan = SubKegiatan::where('tahun', $tahun)
                         ->where('kode_skpd', $kodeSkpd)
+                        ->where('kode_subunit', $kodeSubunit)
                         ->where('kode_program', $kodeProgramSub)
                         ->where('kode_kegiatan', $kodeKegiatanSub)
                         ->where('kode', $kodeSubKegiatan)
-                        ->exists();
-
-                    if ($existsSubKegiatan) {
-                        $skippedSubKegiatan++;
-                    } else {
-                        // Validasi data wajib untuk SubKegiatan
-                        if (!empty($tahun) && !empty($kodeSkpd) && !empty($kodeProgramSub) && !empty($kodeKegiatanSub) && !empty($kodeSubKegiatan)) {
-                            SubKegiatan::create([
+                        ->first();
+                    if ($checkSubKegiatan == null) {
+                        SubKegiatan::create(
+                            [
                                 'tahun' => $tahun,
                                 'kode_skpd' => $kodeSkpd,
-                                'kode_program' => $kodeProgramSub,
+                                'kode_subunit' => $kodeSubunit,
+                                'kode_program' => $kodeProgram,
                                 'kode_kegiatan' => $kodeKegiatanSub,
                                 'kode' => $kodeSubKegiatan,
                                 'nama' => $namaSubKegiatan,
-                            ]);
-
-                            $importedSubKegiatan++;
-                        } else {
-                            $this->warn("Baris {$row}: Data SubKegiatan tidak lengkap, dilewati");
-                            $errorSubKegiatan++;
-                        }
+                            ]
+                        );
+                    } else {
+                        $skippedSubKegiatan++;
                     }
-                    
+
                     // Import ke model Uraian
                     // Mapping kolom sesuai spesifikasi:
                     // tahun = Kolom B (index 1)
@@ -209,50 +195,71 @@ class ImportRekeningBelanja extends Command
                     // kode_rekening = Kolom S (index 18)
                     // nama = Kolom T (index 19)
                     // dpa = Kolom U (index 20)
-                    
+
                     $kodeProgramUraian = $worksheet->getCellByColumnAndRow(11, $row)->getValue();
                     $kodeKegiatanUraian = $worksheet->getCellByColumnAndRow(13, $row)->getValue();
                     $kodeSubkegiatanUraian = $worksheet->getCellByColumnAndRow(15, $row)->getValue();
                     $kodeRekening = $worksheet->getCellByColumnAndRow(19, $row)->getValue();
                     $namaUraian = $worksheet->getCellByColumnAndRow(20, $row)->getValue();
                     $dpa = $worksheet->getCellByColumnAndRow(21, $row)->getValue();
-                    
-                    // Skip jika kode_rekening NULL
-                    if (empty($kodeRekening)) {
-                        $skippedUraian++;
+
+                    $checkUraian = Uraian::where('tahun', $tahun)
+                        ->where('kode_skpd', $kodeSkpd)
+                        ->where('kode_subunit', $kodeSubunit)
+                        ->where('kode_program', $kodeProgramUraian)
+                        ->where('kode_kegiatan', $kodeKegiatanUraian)
+                        ->where('kode_subkegiatan', $kodeSubkegiatanUraian)
+                        ->where('kode_rekening', $kodeRekening)
+                        ->first();
+                    if ($checkUraian == null) {
+                        Uraian::create(
+                            [
+                                'tahun' => $tahun,
+                                'kode_skpd' => $kodeSkpd,
+                                'kode_subunit' => $kodeSubunit,
+                                'kode_program' => $kodeProgramUraian,
+                                'kode_kegiatan' => $kodeKegiatanUraian,
+                                'kode_subkegiatan' => $kodeSubkegiatanUraian,
+                                'kode_rekening' => $kodeRekening,
+                                'nama' => $namaUraian,
+                                'dpa' => $dpa,
+                            ]
+                        );
                     } else {
-                        // Cek apakah data Uraian sudah ada
-                        $existsUraian = Uraian::where('tahun', $tahun)
-                            ->where('kode_skpd', $kodeSkpd)
-                            ->where('kode_program', $kodeProgramUraian)
-                            ->where('kode_kegiatan', $kodeKegiatanUraian)
-                            ->where('kode_subkegiatan', $kodeSubkegiatanUraian)
-                            ->where('kode_rekening', $kodeRekening)
-                            ->exists();
-
-                        if ($existsUraian) {
-                            $skippedUraian++;
-                        } else {
-                            // Validasi data wajib untuk Uraian
-                            if (!empty($tahun) && !empty($kodeSkpd) && !empty($kodeProgramUraian) && !empty($kodeKegiatanUraian) && !empty($kodeSubkegiatanUraian) && !empty($kodeRekening)) {
-                                Uraian::create([
-                                    'tahun' => $tahun,
-                                    'kode_skpd' => $kodeSkpd,
-                                    'kode_program' => $kodeProgramUraian,
-                                    'kode_kegiatan' => $kodeKegiatanUraian,
-                                    'kode_subkegiatan' => $kodeSubkegiatanUraian,
-                                    'kode_rekening' => $kodeRekening,
-                                    'nama' => $namaUraian,
-                                    'dpa' => $dpa,
-                                ]);
-
-                                $importedUraian++;
-                            } else {
-                                $this->warn("Baris {$row}: Data Uraian tidak lengkap, dilewati");
-                                $errorUraian++;
-                            }
-                        }
+                        $skippedUraian++;
                     }
+
+                    // // Skip jika kode_rekening NULL
+                    // if (empty($kodeRekening)) {
+                    //     $skippedUraian++;
+                    // } else {
+                    //     // Validasi data wajib untuk Uraian
+                    //     if (!empty($tahun) && !empty($kodeSkpd) && !empty($kodeProgramUraian) && !empty($kodeKegiatanUraian) && !empty($kodeSubkegiatanUraian) && !empty($kodeRekening)) {
+                    //         $uraian = Uraian::updateOrCreate(
+                    //             [
+                    //                 'tahun' => $tahun,
+                    //                 'kode_skpd' => $kodeSkpd,
+                    //                 'kode_program' => $kodeProgramUraian,
+                    //                 'kode_kegiatan' => $kodeKegiatanUraian,
+                    //                 'kode_subkegiatan' => $kodeSubkegiatanUraian,
+                    //                 'kode_rekening' => $kodeRekening,
+                    //             ],
+                    //             [
+                    //                 'nama' => $namaUraian,
+                    //                 'dpa' => $dpa,
+                    //             ]
+                    //         );
+
+                    //         if ($uraian->wasRecentlyCreated) {
+                    //             $importedUraian++;
+                    //         } else {
+                    //             $skippedUraian++;
+                    //         }
+                    //     } else {
+                    //         $this->warn("Baris {$row}: Data Uraian tidak lengkap, dilewati");
+                    //         $errorUraian++;
+                    //     }
+                    // }
 
                     // Progress bar - tampilkan setiap 1000 baris
                     if ($row % 1000 === 0) {
