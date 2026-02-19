@@ -16,4 +16,11 @@
             <span class="ml-3 font-medium">Subkegiatan</span>
         </a>
     </li>
+    <li>
+        <a href="{{ route('pptk.realisasi.index') }}"
+            class="menu-item {{ request()->routeIs('pptk.realisasi.*') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg text-slate-300">
+            <i class="fas fa-chart-line w-5 text-slate-400"></i>
+            <span class="ml-3 font-medium">Realisasi</span>
+        </a>
+    </li>
 </ul>

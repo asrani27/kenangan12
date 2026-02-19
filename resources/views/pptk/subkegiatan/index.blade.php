@@ -91,6 +91,11 @@
                                 <i class="fas fa-file-alt mr-1"></i>{{ $subkegiatanItem->uraian->count() }}
                             </span>
                             @endif
+                            <a href="{{ route('pptk.subkegiatan.target', ['id' => $subkegiatanItem->id]) }}"
+                                class="w-8 h-8 rounded-lg bg-gradient-to-r from-amber-500 to-orange-600 text-white flex items-center justify-center hover:from-amber-600 hover:to-orange-700 transition-all shadow-lg shadow-amber-500/20"
+                                title="Target">
+                                <i class="fas fa-bullseye text-sm"></i>
+                            </a>
                             <a href="{{ route('pptk.uraian.create', ['subkegiatan_id' => $subkegiatanItem->id]) }}"
                                 class="w-8 h-8 rounded-lg bg-gradient-to-r from-green-500 to-emerald-600 text-white flex items-center justify-center hover:from-green-600 hover:to-emerald-700 transition-all shadow-lg shadow-green-500/20"
                                 title="Tambah Uraian">

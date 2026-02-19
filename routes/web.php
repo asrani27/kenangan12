@@ -108,6 +108,12 @@ Route::prefix('pptk')->name('pptk.')->middleware(['auth'])->group(function () {
     Route::get('/profile', [PptkDashboardController::class, 'profile'])->name('profile');
     Route::post('/profile', [PptkDashboardController::class, 'updateProfile'])->name('profile.update');
     Route::get('/subkegiatan', [PptkDashboardController::class, 'subkegiatanIndex'])->name('subkegiatan.index');
+    Route::get('/subkegiatan/{id}/target', [PptkDashboardController::class, 'subkegiatanTarget'])->name('subkegiatan.target');
+
+    // Target Routes (MUST be before uraian routes to avoid route conflicts)
+    Route::get('/target/{id}', [PptkDashboardController::class, 'getTarget'])->name('target.show');
+    Route::delete('/target/{id}', [PptkDashboardController::class, 'deleteTarget'])->name('target.destroy');
+    Route::put('/target/{id}', [PptkDashboardController::class, 'updateTarget'])->name('target.update');
 
     // Uraian Routes
     Route::prefix('uraian')->name('uraian.')->group(function () {
@@ -117,5 +123,13 @@ Route::prefix('pptk')->name('pptk.')->middleware(['auth'])->group(function () {
         Route::put('/{id}', [PptkDashboardController::class, 'uraianUpdate'])->name('update');
         Route::delete('/{id}', [PptkDashboardController::class, 'uraianDestroy'])->name('destroy');
         Route::post('/{id}/anggaran-kas', [PptkDashboardController::class, 'saveAnggaranKas'])->name('anggaran-kas');
+        Route::post('/{id}/target', [PptkDashboardController::class, 'saveTarget'])->name('uraian.target');
+        Route::post('/{id}/realisasi', [PptkDashboardController::class, 'saveRealisasi'])->name('realisasi');
+    });
+
+    // Realisasi Routes
+    Route::prefix('realisasi')->name('realisasi.')->group(function () {
+        Route::get('/', [PptkDashboardController::class, 'realisasiIndex'])->name('index');
+        Route::get('/{id}', [PptkDashboardController::class, 'realisasiShow'])->name('show');
     });
 });

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Pptk;
 use App\Models\SubKegiatan;
 use App\Models\Uraian;
+use App\Models\Target;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -46,48 +47,39 @@ class PptkDashboardController extends Controller
     }
 
     /**
-     * Display the user profile page.
+     * Display target page for a subkegiatan.
      *
+     * @param  int  $id
      * @return \Illuminate\View\View
      */
-    public function profile()
+    public function subkegiatanTarget($id)
     {
-        return view('pptk.profile');
-    }
-
-    /**
-     * Update the user's password.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\RedirectResponse
-     */
-    public function updateProfile(Request $request)
-    {
-        // Validate the request
-        $request->validate([
-            'current_password' => 'required|string',
-            'password' => 'required|string|min:8|confirmed',
-        ], [
-            'current_password.required' => 'Kata sandi saat ini wajib diisi.',
-            'password.required' => 'Kata sandi baru wajib diisi.',
-            'password.min' => 'Kata sandi baru minimal harus 8 karakter.',
-            'password.confirmed' => 'Konfirmasi kata sandi tidak cocok.',
-        ]);
-
-        $user = Auth::user();
-
-        // Verify current password
-        if (!Hash::check($request->current_password, $user->password)) {
-            return back()->withErrors([
-                'current_password' => 'Kata sandi saat ini tidak benar.'
-            ]);
+        if (!Auth::check()) {
+            return redirect()->route('login')
+                ->with('error', 'Silakan login terlebih dahulu.');
         }
 
-        // Update password
-        $user->password = Hash::make($request->password);
-        $user->save();
+        $user = Auth::user();
+        $pptk = Pptk::where('user_id', $user->id)->first();
 
-        return back()->with('success', 'Kata sandi berhasil diubah!');
+        if (!$pptk) {
+            return back()->with('error', 'Data PPTK tidak ditemukan.');
+        }
+
+        $subkegiatan = SubKegiatan::findOrFail($id);
+
+        // Verify that this subkegiatan belongs to the PPTK
+        if ($subkegiatan->nip_pptk !== $pptk->nip_pptk) {
+            return back()->with('error', 'Anda tidak memiliki akses ke subkegiatan ini.');
+        }
+
+        // Get uraian for this subkegiatan with their targets
+        $uraian = Uraian::where('kode_subkegiatan', $subkegiatan->kode)
+            ->where('tahun', $subkegiatan->tahun)
+            ->with('targets')
+            ->get();
+
+        return view('pptk.subkegiatan.target', compact('subkegiatan', 'uraian'));
     }
 
     /**
@@ -318,6 +310,324 @@ class PptkDashboardController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Anggaran Kas berhasil disimpan!'
+        ]);
+    }
+
+    /**
+     * Save target data for a uraian.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  int  $id
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function saveTarget(Request $request, $id)
+    {
+        $request->validate([
+            'keterangan' => 'required|string|max:255',
+            'spesifikasi' => 'required|string|max:255',
+            'jumlah' => 'required|numeric|min:1',
+            'satuan' => 'required|string|max:50',
+            'target_januari' => 'nullable|numeric',
+            'target_februari' => 'nullable|numeric',
+            'target_maret' => 'nullable|numeric',
+            'target_april' => 'nullable|numeric',
+            'target_mei' => 'nullable|numeric',
+            'target_juni' => 'nullable|numeric',
+            'target_juli' => 'nullable|numeric',
+            'target_agustus' => 'nullable|numeric',
+            'target_september' => 'nullable|numeric',
+            'target_oktober' => 'nullable|numeric',
+            'target_november' => 'nullable|numeric',
+            'target_desember' => 'nullable|numeric',
+        ], [
+            'keterangan.required' => 'Keterangan wajib diisi.',
+            'spesifikasi.required' => 'Spesifikasi wajib diisi.',
+            'jumlah.required' => 'Jumlah wajib diisi.',
+            'jumlah.numeric' => 'Jumlah harus berupa angka.',
+            'jumlah.min' => 'Jumlah minimal 1.',
+            'satuan.required' => 'Satuan wajib diisi.',
+        ]);
+
+        $uraian = Uraian::findOrFail($id);
+
+        // Create new target
+        Target::create([
+            'uraian_id' => $uraian->id,
+            'keterangan' => $request->keterangan,
+            'spesifikasi' => $request->spesifikasi,
+            'jumlah' => $request->jumlah,
+            'satuan' => $request->satuan,
+            'target_januari' => $request->target_januari ?? 0,
+            'target_februari' => $request->target_februari ?? 0,
+            'target_maret' => $request->target_maret ?? 0,
+            'target_april' => $request->target_april ?? 0,
+            'target_mei' => $request->target_mei ?? 0,
+            'target_juni' => $request->target_juni ?? 0,
+            'target_juli' => $request->target_juli ?? 0,
+            'target_agustus' => $request->target_agustus ?? 0,
+            'target_september' => $request->target_september ?? 0,
+            'target_oktober' => $request->target_oktober ?? 0,
+            'target_november' => $request->target_november ?? 0,
+            'target_desember' => $request->target_desember ?? 0,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Target berhasil disimpan!'
+        ]);
+    }
+
+    /**
+     * Delete target data.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function deleteTarget($id)
+    {
+        $target = Target::findOrFail($id);
+        $target->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Target berhasil dihapus!'
+        ]);
+    }
+
+    /**
+     * Get target data.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function getTarget($id)
+    {
+        $target = Target::findOrFail($id);
+
+        return response()->json([
+            'success' => true,
+            'target' => $target
+        ]);
+    }
+
+    /**
+     * Update target data.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  int  $id
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function updateTarget(Request $request, $id)
+    {
+        $request->validate([
+            'keterangan' => 'required|string|max:255',
+            'spesifikasi' => 'required|string|max:255',
+            'jumlah' => 'required|numeric|min:1',
+            'satuan' => 'required|string|max:50',
+            'target_januari' => 'nullable|numeric',
+            'target_februari' => 'nullable|numeric',
+            'target_maret' => 'nullable|numeric',
+            'target_april' => 'nullable|numeric',
+            'target_mei' => 'nullable|numeric',
+            'target_juni' => 'nullable|numeric',
+            'target_juli' => 'nullable|numeric',
+            'target_agustus' => 'nullable|numeric',
+            'target_september' => 'nullable|numeric',
+            'target_oktober' => 'nullable|numeric',
+            'target_november' => 'nullable|numeric',
+            'target_desember' => 'nullable|numeric',
+        ], [
+            'keterangan.required' => 'Keterangan wajib diisi.',
+            'spesifikasi.required' => 'Spesifikasi wajib diisi.',
+            'jumlah.required' => 'Jumlah wajib diisi.',
+            'jumlah.numeric' => 'Jumlah harus berupa angka.',
+            'jumlah.min' => 'Jumlah minimal 1.',
+            'satuan.required' => 'Satuan wajib diisi.',
+        ]);
+
+        $target = Target::findOrFail($id);
+
+        // Update target
+        $target->update([
+            'keterangan' => $request->keterangan,
+            'spesifikasi' => $request->spesifikasi,
+            'jumlah' => $request->jumlah,
+            'satuan' => $request->satuan,
+            'target_januari' => $request->target_januari ?? 0,
+            'target_februari' => $request->target_februari ?? 0,
+            'target_maret' => $request->target_maret ?? 0,
+            'target_april' => $request->target_april ?? 0,
+            'target_mei' => $request->target_mei ?? 0,
+            'target_juni' => $request->target_juni ?? 0,
+            'target_juli' => $request->target_juli ?? 0,
+            'target_agustus' => $request->target_agustus ?? 0,
+            'target_september' => $request->target_september ?? 0,
+            'target_oktober' => $request->target_oktober ?? 0,
+            'target_november' => $request->target_november ?? 0,
+            'target_desember' => $request->target_desember ?? 0,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Target berhasil diperbarui!'
+        ]);
+    }
+
+    /**
+     * Display realisasi index page.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\View\View
+     */
+    public function realisasiIndex(Request $request)
+    {
+        if (!Auth::check()) {
+            return redirect()->route('login')
+                ->with('error', 'Silakan login terlebih dahulu.');
+        }
+
+        $user = Auth::user();
+        $pptk = Pptk::where('user_id', $user->id)->first();
+
+        if (!$pptk) {
+            return back()->with('error', 'Data PPTK tidak ditemukan.');
+        }
+
+        // Get unique years from subkegiatan
+        $years = SubKegiatan::where('nip_pptk', $pptk->nip_pptk)
+            ->distinct()
+            ->orderBy('tahun', 'desc')
+            ->pluck('tahun');
+
+        // Set default year to current year if no year parameter is provided
+        $currentYear = date('Y');
+        $selectedYear = $request->has('year') && $request->year !== ''
+            ? $request->year
+            : $currentYear;
+
+        // Build query with year filter
+        $query = SubKegiatan::where('nip_pptk', $pptk->nip_pptk)
+            ->with(['kegiatan.program' => function ($query) use ($pptk) {
+                $query->where('kode_skpd', $pptk->skpd->kode_skpd);
+            }])
+            ->whereHas('kegiatan.program', function ($query) use ($pptk) {
+                $query->where('kode_skpd', $pptk->skpd->kode_skpd);
+            });
+
+        if ($selectedYear) {
+            $query->where('tahun', $selectedYear);
+        }
+
+        $subkegiatan = $query->get();
+
+        return view('pptk.realisasi.index', compact('subkegiatan', 'years', 'selectedYear'));
+    }
+
+    /**
+     * Display realisasi form for a subkegiatan.
+     *
+     * @param  int  $id
+     * @return \Illuminate\View\View
+     */
+    public function realisasiShow($id)
+    {
+        if (!Auth::check()) {
+            return redirect()->route('login')
+                ->with('error', 'Silakan login terlebih dahulu.');
+        }
+
+        $user = Auth::user();
+        $pptk = Pptk::where('user_id', $user->id)->first();
+
+        if (!$pptk) {
+            return back()->with('error', 'Data PPTK tidak ditemukan.');
+        }
+
+        $subkegiatan = SubKegiatan::findOrFail($id);
+
+        // Verify that this subkegiatan belongs to the PPTK
+        if ($subkegiatan->nip_pptk !== $pptk->nip_pptk) {
+            return back()->with('error', 'Anda tidak memiliki akses ke subkegiatan ini.');
+        }
+
+        // Get uraian for this subkegiatan with their targets
+        $uraian = Uraian::where('kode_subkegiatan', $subkegiatan->kode)
+            ->where('tahun', $subkegiatan->tahun)
+            ->with('targets')
+            ->get();
+
+        return view('pptk.realisasi.show', compact('subkegiatan', 'uraian'));
+    }
+
+    /**
+     * Save realisasi data for a uraian.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  int  $id
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function saveRealisasi(Request $request)
+    {
+        $request->validate([
+            'januari_keuangan' => 'nullable|numeric',
+            'februari_keuangan' => 'nullable|numeric',
+            'maret_keuangan' => 'nullable|numeric',
+            'april_keuangan' => 'nullable|numeric',
+            'mei_keuangan' => 'nullable|numeric',
+            'juni_keuangan' => 'nullable|numeric',
+            'juli_keuangan' => 'nullable|numeric',
+            'agustus_keuangan' => 'nullable|numeric',
+            'september_keuangan' => 'nullable|numeric',
+            'oktober_keuangan' => 'nullable|numeric',
+            'november_keuangan' => 'nullable|numeric',
+            'desember_keuangan' => 'nullable|numeric',
+            'januari_fisik' => 'nullable|numeric',
+            'februari_fisik' => 'nullable|numeric',
+            'maret_fisik' => 'nullable|numeric',
+            'april_fisik' => 'nullable|numeric',
+            'mei_fisik' => 'nullable|numeric',
+            'juni_fisik' => 'nullable|numeric',
+            'juli_fisik' => 'nullable|numeric',
+            'agustus_fisik' => 'nullable|numeric',
+            'september_fisik' => 'nullable|numeric',
+            'oktober_fisik' => 'nullable|numeric',
+            'november_fisik' => 'nullable|numeric',
+            'desember_fisik' => 'nullable|numeric',
+        ]);
+
+        $uraian = Uraian::findOrFail($id);
+
+        // Update uraian with realisasi data
+        $uraian->update([
+            'r_januari_keuangan' => $request->januari_keuangan ?? 0,
+            'r_februari_keuangan' => $request->februari_keuangan ?? 0,
+            'r_maret_keuangan' => $request->maret_keuangan ?? 0,
+            'r_april_keuangan' => $request->april_keuangan ?? 0,
+            'r_mei_keuangan' => $request->mei_keuangan ?? 0,
+            'r_juni_keuangan' => $request->juni_keuangan ?? 0,
+            'r_juli_keuangan' => $request->juli_keuangan ?? 0,
+            'r_agustus_keuangan' => $request->agustus_keuangan ?? 0,
+            'r_september_keuangan' => $request->september_keuangan ?? 0,
+            'r_oktober_keuangan' => $request->oktober_keuangan ?? 0,
+            'r_november_keuangan' => $request->november_keuangan ?? 0,
+            'r_desember_keuangan' => $request->desember_keuangan ?? 0,
+            'r_januari_fisik' => $request->januari_fisik ?? 0,
+            'r_februari_fisik' => $request->februari_fisik ?? 0,
+            'r_maret_fisik' => $request->maret_fisik ?? 0,
+            'r_april_fisik' => $request->april_fisik ?? 0,
+            'r_mei_fisik' => $request->mei_fisik ?? 0,
+            'r_juni_fisik' => $request->juni_fisik ?? 0,
+            'r_juli_fisik' => $request->juli_fisik ?? 0,
+            'r_agustus_fisik' => $request->agustus_fisik ?? 0,
+            'r_september_fisik' => $request->september_fisik ?? 0,
+            'r_oktober_fisik' => $request->oktober_fisik ?? 0,
+            'r_november_fisik' => $request->november_fisik ?? 0,
+            'r_desember_fisik' => $request->desember_fisik ?? 0,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Realisasi berhasil disimpan!'
         ]);
     }
 }
