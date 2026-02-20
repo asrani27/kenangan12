@@ -78,7 +78,7 @@
             </div>
             @endif
         </div>
-        <button type="button" onclick="openAddTargetModal({{ $uraianItem->id }}, '{{ $uraianItem->nama }}')"
+        <button type="button" onclick="openAddTargetModal({{ $uraianItem->id }}, {{ json_encode($uraianItem->nama) }})"
             class="mt-3 md:mt-0 inline-flex items-center px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-600 text-white text-sm font-medium rounded-lg hover:from-amber-600 hover:to-orange-700 transition-all shadow-lg shadow-amber-500/20">
             <i class="fas fa-plus mr-2"></i>
             Tambah Target
@@ -118,17 +118,17 @@
                     <td class="py-3">
                         <div class="flex items-center justify-center space-x-2">
                             <button type="button"
-                                onclick="openEditTargetModal({{ $target->id }}, {{ $uraianItem->id }}, '{{ $uraianItem->nama }}')"
+                                onclick="openEditTargetModal({{ $target->id }}, {{ $uraianItem->id }}, {{ json_encode($uraianItem->nama) }})"
                                 class="w-8 h-8 rounded-lg bg-blue-500/10 border border-blue-500/30 text-blue-400 flex items-center justify-center hover:bg-blue-500/20 transition-colors"
                                 title="Edit Target">
                                 <i class="fas fa-edit text-sm"></i>
                             </button>
-                            <button type="button"
+                            {{-- <button type="button"
                                 onclick="openRealisasiTargetModal({{ $target->id }}, '{{ $target->keterangan }}')"
                                 class="w-8 h-8 rounded-lg bg-green-500/10 border border-green-500/30 text-green-400 flex items-center justify-center hover:bg-green-500/20 transition-colors"
                                 title="Input Realisasi Target">
                                 <i class="fas fa-chart-line text-sm"></i>
-                            </button>
+                            </button> --}}
                             <button type="button" onclick="deleteTarget({{ $target->id }})"
                                 class="w-8 h-8 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 flex items-center justify-center hover:bg-red-500/20 transition-colors"
                                 title="Hapus Target">

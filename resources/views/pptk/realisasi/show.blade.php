@@ -77,7 +77,7 @@
             </div>
             @endif
         </div>
-        <button type="button" onclick="openRealisasiModal({{ $uraianItem->id }}, '{{ $uraianItem->nama }}', {{ $uraianItem->dpa ?? 0 }}, {{ json_encode([
+        <button type="button" onclick="openRealisasiModal({{ $uraianItem->id }}, {{ json_encode($uraianItem->nama) }}, {{ $uraianItem->dpa ?? 0 }}, {{ json_encode([
             'r_januari_keuangan' => $uraianItem->r_januari_keuangan ?? 0,
             'r_februari_keuangan' => $uraianItem->r_februari_keuangan ?? 0,
             'r_maret_keuangan' => $uraianItem->r_maret_keuangan ?? 0,
@@ -137,7 +137,19 @@
                     </td>
                     <td class="py-3">
                         <div class="flex items-center justify-center space-x-2">
-                            <button type="button" onclick="openRealisasiTargetModal({{ $target->id }}, '{{ $target->keterangan }}', {{ $target->satuan ?? 'null' }}, {{ json_encode([
+                            <button type="button" onclick="openRealisasiTargetModal({{ $target->id }}, {{ json_encode($target->keterangan) }}, {{ json_encode($target->satuan) }}, {{ json_encode([
+                                'target_januari' => $target->target_januari ?? 0,
+                                'target_februari' => $target->target_februari ?? 0,
+                                'target_maret' => $target->target_maret ?? 0,
+                                'target_april' => $target->target_april ?? 0,
+                                'target_mei' => $target->target_mei ?? 0,
+                                'target_juni' => $target->target_juni ?? 0,
+                                'target_juli' => $target->target_juli ?? 0,
+                                'target_agustus' => $target->target_agustus ?? 0,
+                                'target_september' => $target->target_september ?? 0,
+                                'target_oktober' => $target->target_oktober ?? 0,
+                                'target_november' => $target->target_november ?? 0,
+                                'target_desember' => $target->target_desember ?? 0,
                                 'realisasi_januari' => $target->realisasi_januari ?? 0,
                                 'realisasi_februari' => $target->realisasi_februari ?? 0,
                                 'realisasi_maret' => $target->realisasi_maret ?? 0,
@@ -511,6 +523,8 @@ function saveRealisasi() {
         saveButton.innerHTML = originalText;
     });
 }
+</script>
+
 <!-- Realisasi Target Modal -->
 <div id="realisasiTargetModal" class="fixed inset-0 z-50 hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
     <!-- Backdrop -->
@@ -539,103 +553,136 @@ function saveRealisasi() {
                 <input type="hidden" id="realisasiTargetSatuan">
                 
                 <!-- Table Header -->
-                <div class="grid grid-cols-2 gap-4 mb-4 px-2">
+                <div class="grid grid-cols-3 gap-4 mb-4 px-2">
                     <div class="text-sm font-semibold text-slate-400">Bulan</div>
-                    <div class="text-sm font-semibold text-slate-400 text-center">Realisasi Target</div>
+                    <div class="text-sm font-semibold text-slate-400 text-center">Target</div>
+                    <div class="text-sm font-semibold text-slate-400 text-center">Realisasi</div>
                 </div>
                 
                 <!-- Month Rows -->
                 <div class="space-y-3" id="realisasiTargetMonths">
                     <!-- Januari -->
-                    <div class="grid grid-cols-2 gap-4 items-center">
+                    <div class="grid grid-cols-3 gap-4 items-center">
                         <div class="text-sm text-white font-medium">Januari</div>
-                        <input type="number" name="realisasi_januari" placeholder="0" min="0" step="0.01"
+                        <input type="text" name="target_januari" placeholder="0" readonly
+                            class="w-full bg-slate-800 text-slate-400 text-sm rounded-lg border border-slate-600 px-4 py-2 text-center" data-raw-value="">
+                        <input type="number" name="realisasi_januari" placeholder="0" min="0" step="0.01" oninput="calculateRealisasiTargetTotal()"
                             class="w-full bg-slate-700 text-white text-sm rounded-lg border border-slate-600 px-4 py-2 focus:ring-2 focus:ring-green-500 focus:border-green-500 placeholder-slate-500 text-center">
                     </div>
                     
                     <!-- Februari -->
-                    <div class="grid grid-cols-2 gap-4 items-center">
+                    <div class="grid grid-cols-3 gap-4 items-center">
                         <div class="text-sm text-white font-medium">Februari</div>
-                        <input type="number" name="realisasi_februari" placeholder="0" min="0" step="0.01"
+                        <input type="text" name="target_februari" placeholder="0" readonly
+                            class="w-full bg-slate-800 text-slate-400 text-sm rounded-lg border border-slate-600 px-4 py-2 text-center" data-raw-value="">
+                        <input type="number" name="realisasi_februari" placeholder="0" min="0" step="0.01" oninput="calculateRealisasiTargetTotal()"
                             class="w-full bg-slate-700 text-white text-sm rounded-lg border border-slate-600 px-4 py-2 focus:ring-2 focus:ring-green-500 focus:border-green-500 placeholder-slate-500 text-center">
                     </div>
                     
                     <!-- Maret -->
-                    <div class="grid grid-cols-2 gap-4 items-center">
+                    <div class="grid grid-cols-3 gap-4 items-center">
                         <div class="text-sm text-white font-medium">Maret</div>
-                        <input type="number" name="realisasi_maret" placeholder="0" min="0" step="0.01"
+                        <input type="text" name="target_maret" placeholder="0" readonly
+                            class="w-full bg-slate-800 text-slate-400 text-sm rounded-lg border border-slate-600 px-4 py-2 text-center" data-raw-value="">
+                        <input type="number" name="realisasi_maret" placeholder="0" min="0" step="0.01" oninput="calculateRealisasiTargetTotal()"
                             class="w-full bg-slate-700 text-white text-sm rounded-lg border border-slate-600 px-4 py-2 focus:ring-2 focus:ring-green-500 focus:border-green-500 placeholder-slate-500 text-center">
                     </div>
                     
                     <!-- April -->
-                    <div class="grid grid-cols-2 gap-4 items-center">
+                    <div class="grid grid-cols-3 gap-4 items-center">
                         <div class="text-sm text-white font-medium">April</div>
-                        <input type="number" name="realisasi_april" placeholder="0" min="0" step="0.01"
+                        <input type="text" name="target_april" placeholder="0" readonly
+                            class="w-full bg-slate-800 text-slate-400 text-sm rounded-lg border border-slate-600 px-4 py-2 text-center" data-raw-value="">
+                        <input type="number" name="realisasi_april" placeholder="0" min="0" step="0.01" oninput="calculateRealisasiTargetTotal()"
                             class="w-full bg-slate-700 text-white text-sm rounded-lg border border-slate-600 px-4 py-2 focus:ring-2 focus:ring-green-500 focus:border-green-500 placeholder-slate-500 text-center">
                     </div>
                     
                     <!-- Mei -->
-                    <div class="grid grid-cols-2 gap-4 items-center">
+                    <div class="grid grid-cols-3 gap-4 items-center">
                         <div class="text-sm text-white font-medium">Mei</div>
-                        <input type="number" name="realisasi_mei" placeholder="0" min="0" step="0.01"
+                        <input type="text" name="target_mei" placeholder="0" readonly
+                            class="w-full bg-slate-800 text-slate-400 text-sm rounded-lg border border-slate-600 px-4 py-2 text-center" data-raw-value="">
+                        <input type="number" name="realisasi_mei" placeholder="0" min="0" step="0.01" oninput="calculateRealisasiTargetTotal()"
                             class="w-full bg-slate-700 text-white text-sm rounded-lg border border-slate-600 px-4 py-2 focus:ring-2 focus:ring-green-500 focus:border-green-500 placeholder-slate-500 text-center">
                     </div>
                     
                     <!-- Juni -->
-                    <div class="grid grid-cols-2 gap-4 items-center">
+                    <div class="grid grid-cols-3 gap-4 items-center">
                         <div class="text-sm text-white font-medium">Juni</div>
-                        <input type="number" name="realisasi_juni" placeholder="0" min="0" step="0.01"
+                        <input type="text" name="target_juni" placeholder="0" readonly
+                            class="w-full bg-slate-800 text-slate-400 text-sm rounded-lg border border-slate-600 px-4 py-2 text-center" data-raw-value="">
+                        <input type="number" name="realisasi_juni" placeholder="0" min="0" step="0.01" oninput="calculateRealisasiTargetTotal()"
                             class="w-full bg-slate-700 text-white text-sm rounded-lg border border-slate-600 px-4 py-2 focus:ring-2 focus:ring-green-500 focus:border-green-500 placeholder-slate-500 text-center">
                     </div>
                     
                     <!-- Juli -->
-                    <div class="grid grid-cols-2 gap-4 items-center">
+                    <div class="grid grid-cols-3 gap-4 items-center">
                         <div class="text-sm text-white font-medium">Juli</div>
-                        <input type="number" name="realisasi_juli" placeholder="0" min="0" step="0.01"
+                        <input type="text" name="target_juli" placeholder="0" readonly
+                            class="w-full bg-slate-800 text-slate-400 text-sm rounded-lg border border-slate-600 px-4 py-2 text-center" data-raw-value="">
+                        <input type="number" name="realisasi_juli" placeholder="0" min="0" step="0.01" oninput="calculateRealisasiTargetTotal()"
                             class="w-full bg-slate-700 text-white text-sm rounded-lg border border-slate-600 px-4 py-2 focus:ring-2 focus:ring-green-500 focus:border-green-500 placeholder-slate-500 text-center">
                     </div>
                     
                     <!-- Agustus -->
-                    <div class="grid grid-cols-2 gap-4 items-center">
+                    <div class="grid grid-cols-3 gap-4 items-center">
                         <div class="text-sm text-white font-medium">Agustus</div>
-                        <input type="number" name="realisasi_agustus" placeholder="0" min="0" step="0.01"
+                        <input type="text" name="target_agustus" placeholder="0" readonly
+                            class="w-full bg-slate-800 text-slate-400 text-sm rounded-lg border border-slate-600 px-4 py-2 text-center" data-raw-value="">
+                        <input type="number" name="realisasi_agustus" placeholder="0" min="0" step="0.01" oninput="calculateRealisasiTargetTotal()"
                             class="w-full bg-slate-700 text-white text-sm rounded-lg border border-slate-600 px-4 py-2 focus:ring-2 focus:ring-green-500 focus:border-green-500 placeholder-slate-500 text-center">
                     </div>
                     
                     <!-- September -->
-                    <div class="grid grid-cols-2 gap-4 items-center">
+                    <div class="grid grid-cols-3 gap-4 items-center">
                         <div class="text-sm text-white font-medium">September</div>
-                        <input type="number" name="realisasi_september" placeholder="0" min="0" step="0.01"
+                        <input type="text" name="target_september" placeholder="0" readonly
+                            class="w-full bg-slate-800 text-slate-400 text-sm rounded-lg border border-slate-600 px-4 py-2 text-center" data-raw-value="">
+                        <input type="number" name="realisasi_september" placeholder="0" min="0" step="0.01" oninput="calculateRealisasiTargetTotal()"
                             class="w-full bg-slate-700 text-white text-sm rounded-lg border border-slate-600 px-4 py-2 focus:ring-2 focus:ring-green-500 focus:border-green-500 placeholder-slate-500 text-center">
                     </div>
                     
                     <!-- Oktober -->
-                    <div class="grid grid-cols-2 gap-4 items-center">
+                    <div class="grid grid-cols-3 gap-4 items-center">
                         <div class="text-sm text-white font-medium">Oktober</div>
-                        <input type="number" name="realisasi_oktober" placeholder="0" min="0" step="0.01"
+                        <input type="text" name="target_oktober" placeholder="0" readonly
+                            class="w-full bg-slate-800 text-slate-400 text-sm rounded-lg border border-slate-600 px-4 py-2 text-center" data-raw-value="">
+                        <input type="number" name="realisasi_oktober" placeholder="0" min="0" step="0.01" oninput="calculateRealisasiTargetTotal()"
                             class="w-full bg-slate-700 text-white text-sm rounded-lg border border-slate-600 px-4 py-2 focus:ring-2 focus:ring-green-500 focus:border-green-500 placeholder-slate-500 text-center">
                     </div>
                     
                     <!-- November -->
-                    <div class="grid grid-cols-2 gap-4 items-center">
+                    <div class="grid grid-cols-3 gap-4 items-center">
                         <div class="text-sm text-white font-medium">November</div>
-                        <input type="number" name="realisasi_november" placeholder="0" min="0" step="0.01"
+                        <input type="text" name="target_november" placeholder="0" readonly
+                            class="w-full bg-slate-800 text-slate-400 text-sm rounded-lg border border-slate-600 px-4 py-2 text-center" data-raw-value="">
+                        <input type="number" name="realisasi_november" placeholder="0" min="0" step="0.01" oninput="calculateRealisasiTargetTotal()"
                             class="w-full bg-slate-700 text-white text-sm rounded-lg border border-slate-600 px-4 py-2 focus:ring-2 focus:ring-green-500 focus:border-green-500 placeholder-slate-500 text-center">
                     </div>
                     
                     <!-- Desember -->
-                    <div class="grid grid-cols-2 gap-4 items-center">
+                    <div class="grid grid-cols-3 gap-4 items-center">
                         <div class="text-sm text-white font-medium">Desember</div>
-                        <input type="number" name="realisasi_desember" placeholder="0" min="0" step="0.01"
+                        <input type="text" name="target_desember" placeholder="0" readonly
+                            class="w-full bg-slate-800 text-slate-400 text-sm rounded-lg border border-slate-600 px-4 py-2 text-center" data-raw-value="">
+                        <input type="number" name="realisasi_desember" placeholder="0" min="0" step="0.01" oninput="calculateRealisasiTargetTotal()"
                             class="w-full bg-slate-700 text-white text-sm rounded-lg border border-slate-600 px-4 py-2 focus:ring-2 focus:ring-green-500 focus:border-green-500 placeholder-slate-500 text-center">
                     </div>
                 </div>
                 
                 <!-- Total Summary -->
-                <div class="mt-6 p-4 rounded-xl bg-green-500/10 border border-green-500/30">
-                    <div class="flex items-center justify-between">
-                        <span class="text-sm font-medium text-green-400">Total Realisasi Tahunan</span>
-                        <span class="text-lg font-bold text-white" id="totalRealisasiTarget">0</span>
+                <div class="mt-6 grid grid-cols-2 gap-4">
+                    <div class="p-4 rounded-xl bg-blue-500/10 border border-blue-500/30">
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm font-medium text-blue-400">Total Target</span>
+                            <span class="text-lg font-bold text-white" id="totalTarget">0</span>
+                        </div>
+                    </div>
+                    <div class="p-4 rounded-xl bg-green-500/10 border border-green-500/30">
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm font-medium text-green-400">Total Realisasi</span>
+                            <span class="text-lg font-bold text-white" id="totalRealisasiTarget">0</span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -660,20 +707,30 @@ function saveRealisasi() {
 function openRealisasiTargetModal(targetId, targetName, satuan, existingData) {
     document.getElementById('realisasiTargetId').value = targetId;
     document.getElementById('realisasiTargetName').textContent = targetName;
-    document.getElementById('realisasiTargetSatuan').value = satuan || '';
+    document.getElementById('realisasiTargetSatuan').value = satuan ? satuan.toString() : '';
     document.getElementById('realisasiTargetModal').classList.remove('hidden');
     
     // Load existing data into inputs
     const months = ['januari', 'februari', 'maret', 'april', 'mei', 'juni', 'juli', 'agustus', 'september', 'oktober', 'november', 'desember'];
     
     months.forEach(month => {
-        const input = document.querySelector(`#realisasiTargetModal input[name="realisasi_${month}"]`);
+        const targetInput = document.querySelector(`#realisasiTargetModal input[name="target_${month}"]`);
+        const realisasiInput = document.querySelector(`#realisasiTargetModal input[name="realisasi_${month}"]`);
         
-        // Load existing data
-        if (input && existingData && existingData[`realisasi_${month}`]) {
-            input.value = existingData[`realisasi_${month}`];
+        // Load target data (readonly)
+        if (targetInput && existingData && existingData[`target_${month}`]) {
+            const targetValue = existingData[`target_${month}`];
+            targetInput.setAttribute('data-raw-value', targetValue);
+            targetInput.value = parseFloat(targetValue).toFixed(2);
         } else {
-            input.value = '';
+            targetInput.value = '0';
+        }
+        
+        // Load existing realisasi data
+        if (realisasiInput && existingData && existingData[`realisasi_${month}`]) {
+            realisasiInput.value = existingData[`realisasi_${month}`];
+        } else {
+            realisasiInput.value = '';
         }
     });
     
@@ -693,17 +750,27 @@ function closeRealisasiTargetModal() {
 
 function calculateRealisasiTargetTotal() {
     const months = ['januari', 'februari', 'maret', 'april', 'mei', 'juni', 'juli', 'agustus', 'september', 'oktober', 'november', 'desember'];
-    let total = 0;
+    let totalRealisasi = 0;
+    let totalTarget = 0;
     
     months.forEach(month => {
-        const input = document.querySelector(`#realisasiTargetModal input[name="realisasi_${month}"]`);
-        if (input && input.value) {
-            total += parseFloat(input.value) || 0;
+        const realisasiInput = document.querySelector(`#realisasiTargetModal input[name="realisasi_${month}"]`);
+        const targetInput = document.querySelector(`#realisasiTargetModal input[name="target_${month}"]`);
+        
+        // Calculate total realisasi
+        if (realisasiInput && realisasiInput.value) {
+            totalRealisasi += parseFloat(realisasiInput.value) || 0;
+        }
+        
+        // Calculate total target
+        if (targetInput && targetInput.getAttribute('data-raw-value')) {
+            totalTarget += parseFloat(targetInput.getAttribute('data-raw-value')) || 0;
         }
     });
     
     const satuan = document.getElementById('realisasiTargetSatuan').value;
-    document.getElementById('totalRealisasiTarget').textContent = total.toFixed(2) + ' ' + satuan;
+    document.getElementById('totalTarget').textContent = totalTarget.toFixed(2) + ' ' + satuan;
+    document.getElementById('totalRealisasiTarget').textContent = totalRealisasi.toFixed(2) + ' ' + satuan;
 }
 
 function saveRealisasiTarget() {
@@ -718,8 +785,7 @@ function saveRealisasiTarget() {
     const months = ['januari', 'februari', 'maret', 'april', 'mei', 'juni', 'juli', 'agustus', 'september', 'oktober', 'november', 'desember'];
     
     const formData = {
-        _token: document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-        _method: 'PUT'
+        _token: document.querySelector('meta[name="csrf-token"]').getAttribute('content')
     };
     
     months.forEach(month => {

@@ -630,4 +630,52 @@ class PptkDashboardController extends Controller
             'message' => 'Realisasi berhasil disimpan!'
         ]);
     }
+
+    /**
+     * Save realisasi data for a target.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  int  $id
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function saveRealisasiTarget(Request $request, $id)
+    {
+        $request->validate([
+            'realisasi_januari' => 'nullable|numeric',
+            'realisasi_februari' => 'nullable|numeric',
+            'realisasi_maret' => 'nullable|numeric',
+            'realisasi_april' => 'nullable|numeric',
+            'realisasi_mei' => 'nullable|numeric',
+            'realisasi_juni' => 'nullable|numeric',
+            'realisasi_juli' => 'nullable|numeric',
+            'realisasi_agustus' => 'nullable|numeric',
+            'realisasi_september' => 'nullable|numeric',
+            'realisasi_oktober' => 'nullable|numeric',
+            'realisasi_november' => 'nullable|numeric',
+            'realisasi_desember' => 'nullable|numeric',
+        ]);
+
+        $target = Target::findOrFail($id);
+
+        // Update target with realisasi data
+        $target->update([
+            'realisasi_januari' => $request->realisasi_januari ?? 0,
+            'realisasi_februari' => $request->realisasi_februari ?? 0,
+            'realisasi_maret' => $request->realisasi_maret ?? 0,
+            'realisasi_april' => $request->realisasi_april ?? 0,
+            'realisasi_mei' => $request->realisasi_mei ?? 0,
+            'realisasi_juni' => $request->realisasi_juni ?? 0,
+            'realisasi_juli' => $request->realisasi_juli ?? 0,
+            'realisasi_agustus' => $request->realisasi_agustus ?? 0,
+            'realisasi_september' => $request->realisasi_september ?? 0,
+            'realisasi_oktober' => $request->realisasi_oktober ?? 0,
+            'realisasi_november' => $request->realisasi_november ?? 0,
+            'realisasi_desember' => $request->realisasi_desember ?? 0,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Realisasi target berhasil disimpan!'
+        ]);
+    }
 }

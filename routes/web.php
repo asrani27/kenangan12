@@ -114,6 +114,7 @@ Route::prefix('pptk')->name('pptk.')->middleware(['auth'])->group(function () {
     Route::get('/target/{id}', [PptkDashboardController::class, 'getTarget'])->name('target.show');
     Route::delete('/target/{id}', [PptkDashboardController::class, 'deleteTarget'])->name('target.destroy');
     Route::put('/target/{id}', [PptkDashboardController::class, 'updateTarget'])->name('target.update');
+    Route::post('/target/{id}/realisasi', [PptkDashboardController::class, 'saveRealisasiTarget'])->name('target.realisasi');
 
     // Uraian Routes
     Route::prefix('uraian')->name('uraian.')->group(function () {
