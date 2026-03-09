@@ -6,6 +6,7 @@ use App\Http\Controllers\SuperadminController;
 use App\Http\Controllers\SkpdController;
 use App\Http\Controllers\SkpdDashboardController;
 use App\Http\Controllers\PptkDashboardController;
+use App\Http\Controllers\MaintenanceController;
 
 Route::get('/tikus', function () {
     return view('tikus-tanah');
@@ -19,6 +20,17 @@ Route::get('/server-info', function () {
         'ip' => $_SERVER['SERVER_ADDR'] ?? 'unknown',
     ];
 });
+
+// Maintenance Mode Routes
+Route::get('/maintenance', [MaintenanceController::class, 'index'])->name('maintenance.index');
+Route::get('/maintenance/status', [MaintenanceController::class, 'status'])->name('maintenance.status');
+
+// Maintenance Control Routes (Protected - Superadmin only)
+Route::prefix('maintenance')->name('maintenance.')->middleware(['auth'])->group(function () {
+    Route::post('/enable', [MaintenanceController::class, 'enable'])->name('enable');
+    Route::post('/disable', [MaintenanceController::class, 'disable'])->name('disable');
+});
+
 // Authentication Routes
 Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->name('login.process');
